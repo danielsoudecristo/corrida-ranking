@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Corrida — Ranking Oficial</title>
+<meta name="description" content="Ranking oficial da live de corrida — diário, semanal e ligas.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="fundo-pista"></div>
+
+  <header class="topo">
+    <div class="topo-emoji">🏎️</div>
+    <h1>CORRIDA</h1>
+    <p class="subtitulo">RANKING OFICIAL</p>
+  </header>
+
+  <nav class="abas" role="tablist" aria-label="Escolha o ranking">
+    <button class="aba ativa" data-aba="diario" role="tab" aria-selected="true">🏆 DIÁRIO</button>
+    <button class="aba" data-aba="semanal" role="tab" aria-selected="false">📅 SEMANAL</button>
+    <button class="aba" data-aba="ligas" role="tab" aria-selected="false">🏅 LIGAS</button>
+  </nav>
+
+  <main class="conteudo">
+
+    <!-- ===== RANKING DIÁRIO ===== -->
+    <section class="painel-ranking ativa" id="painel-diario" data-ranking="diario">
+      <div class="info-periodo" id="info-periodo-diario"></div>
+      <div class="busca-wrap">
+        <span class="busca-icone">🔎</span>
+        <input type="text" class="busca-input" id="busca-diario" placeholder="Pesquisar @usuário no Diário" autocomplete="off">
+        <button class="busca-limpar" id="busca-diario-limpar" title="Limpar busca" aria-label="Limpar busca">✕</button>
+      </div>
+      <p class="busca-resultado" id="busca-diario-resultado"></p>
+      <div class="lista-ranking" id="lista-diario">
+        <p class="estado-info">Carregando ranking diário...</p>
+      </div>
+    </section>
+
+    <!-- ===== RANKING SEMANAL ===== -->
+    <section class="painel-ranking" id="painel-semanal" data-ranking="semanal">
+      <div class="info-periodo" id="info-periodo-semanal"></div>
+      <div class="busca-wrap">
+        <span class="busca-icone">🔎</span>
+        <input type="text" class="busca-input" id="busca-semanal" placeholder="Pesquisar @usuário no Semanal" autocomplete="off">
+        <button class="busca-limpar" id="busca-semanal-limpar" title="Limpar busca" aria-label="Limpar busca">✕</button>
+      </div>
+      <p class="busca-resultado" id="busca-semanal-resultado"></p>
+      <div class="lista-ranking" id="lista-semanal">
+        <p class="estado-info">Carregando ranking semanal...</p>
+      </div>
+    </section>
+
+    <!-- ===== RANKING DE LIGAS ===== -->
+    <section class="painel-ranking" id="painel-ligas" data-ranking="ligas">
+      <div class="info-periodo">👑 Permanente — nunca reseta</div>
+      <div class="busca-wrap">
+        <span class="busca-icone">🔎</span>
+        <input type="text" class="busca-input" id="busca-ligas" placeholder="Pesquisar @usuário nas Ligas" autocomplete="off">
+        <button class="busca-limpar" id="busca-ligas-limpar" title="Limpar busca" aria-label="Limpar busca">✕</button>
+      </div>
+      <p class="busca-resultado" id="busca-ligas-resultado"></p>
+      <div class="lista-ranking" id="lista-ligas">
+        <p class="estado-info">Carregando ranking de ligas...</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="rodape">
+    <span id="status-conexao">🔄 Conectando...</span>
+  </footer>
+
+  <script type="module" src="ranking.js"></script>
+</body>
+</html>
