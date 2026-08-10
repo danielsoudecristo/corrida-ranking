@@ -87,7 +87,7 @@ function iniciaisDe(usuario) {
 const SVG_COROA = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18l-1.4-8.2-4.6 3.4L12 6l-3 7.2-4.6-3.4L3 18z"/></svg>`;
 
 // guarda os dados já carregados de cada ranking, pra busca não precisar ir no banco de novo
-const cache = { diario: [], semanal: [], ligas: [] };
+const cache = { diario: [], semanal: [], ligas: [], moedas: [] };
 
 // ---------------------------------------------------------------------------
 // carregamento dos 3 rankings
@@ -100,10 +100,11 @@ const LIMITE_LINHAS = 5000;
 async function carregarRanking(chave) {
   const container = document.getElementById(`lista-${chave}`);
   try {
-    const nomeView = chave === 'diario' ? 'ranking_diario' : chave === 'semanal' ? 'ranking_semanal' : 'ranking_ligas';
+    const nomeView = chave === 'diario' ? 'ranking_diario' : chave === 'semanal' ? 'ranking_semanal' : chave === 'moedas' ? 'ranking_moedas' : 'ranking_ligas';
     // campo usado pra ordenar CADA ranking — ligas usa o troféu permanente da liga; diário
-    // e semanal usam "pontos" (que já é o troféu do período certo, calculado pela view)
-    const campoOrdenacao = chave === 'ligas' ? 'trofeus_total' : 'pontos';
+    // e semanal usam "pontos" (que já é o troféu do período certo, calculado pela view);
+    // moedas usa "moedas_semana" (moedas de presente da semana atual, zera toda segunda)
+    const campoOrdenacao = chave === 'ligas' ? 'trofeus_total' : chave === 'moedas' ? 'moedas_semana' : 'pontos';
     // pede a ordenação AQUI, na consulta — não basta a VIEW já ter "order by" internamente:
     // sem pedir explicitamente na consulta, o Postgres não garante manter essa ordem
     const { data, error } = await supabase
@@ -130,8 +131,8 @@ function renderizarLista(chave) {
     container.innerHTML = '<p class="estado-info">Ainda não tem ninguém nesse ranking.</p>';
     return;
   }
-  const campoValor = chave === 'ligas' ? 'trofeus_total' : 'pontos';
-  const labelValor = 'TROFÉUS';
+  const campoValor = chave === 'ligas' ? 'trofeus_total' : chave === 'moedas' ? 'moedas_semana' : 'pontos';
+  const labelValor = chave === 'moedas' ? 'MOEDAS' : 'TROFÉUS';
   const nomes = nomesParaExibirComDesambiguacao(linhas.map((j) => j.usuario));
   container.innerHTML = linhas.map((j, i) => cardHtml(i + 1, j, campoValor, labelValor, nomes[i])).join('');
   // depois de trocar o HTML, se já tinha uma busca ativa nesse ranking, reaplica o destaque
@@ -197,6 +198,9 @@ function atualizarContagens() {
   const dSemana = Math.floor(msAteSegunda / 86400000);
   const hSemana = Math.floor((msAteSegunda % 86400000) / 3600000);
   document.getElementById('info-periodo-semanal').textContent = `⏳ Restam ${dSemana}d ${hSemana}h`;
+  // moedas reseta na MESMA segunda-feira que o semanal — mesmo texto
+  const elMoedas = document.getElementById('info-periodo-moedas');
+  if (elMoedas) elMoedas.textContent = `⏳ Restam ${dSemana}d ${hSemana}h`;
 }
 
 // ---------------------------------------------------------------------------
@@ -285,7 +289,7 @@ function configurarAbas() {
 // ---------------------------------------------------------------------------
 async function iniciar() {
   configurarAbas();
-  ['diario', 'semanal', 'ligas'].forEach(configurarBusca);
+  ['diario', 'semanal', 'ligas', 'moedas'].forEach(configurarBusca);
   atualizarContagens();
   setInterval(atualizarContagens, 30000); // atualiza a contagem regressiva a cada 30s
 
@@ -294,6 +298,7 @@ async function iniciar() {
     carregarRanking('diario'),
     carregarRanking('semanal'),
     carregarRanking('ligas'),
+    carregarRanking('moedas'),
   ]);
   statusEl.textContent = resultados.every(Boolean)
     ? '🟢 Dados atualizados'
