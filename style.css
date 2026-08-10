@@ -147,6 +147,13 @@ html, body {
 .card-jogador.ouro   { animation: respirarOuro 2.4s ease-in-out infinite; }
 .card-jogador.prata  { animation: respirarPrata 2.4s ease-in-out infinite; }
 .card-jogador.bronze { animation: respirarBronze 2.4s ease-in-out infinite; }
+/* isola a repintura desses 3 numa camada própria — alguns navegadores (principalmente no
+   celular) "empurram" o layout dos itens de baixo quando um box-shadow animado fica dentro
+   de uma lista com rolagem, dando a impressão de que a lista "quebra" logo depois do Top 3 */
+.card-jogador.ouro, .card-jogador.prata, .card-jogador.bronze {
+  will-change: box-shadow;
+  transform: translateZ(0);
+}
 @keyframes respirarOuro {
   0%, 100% { box-shadow: 0 0 6px 1px rgba(255,215,0,0.5), 0 0 0 2px rgba(255,215,0,0.45) inset; }
   50% { box-shadow: 0 0 16px 4px rgba(255,215,0,0.95), 0 0 0 2px rgba(255,215,0,0.9) inset; }
