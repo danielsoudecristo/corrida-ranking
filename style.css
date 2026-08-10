@@ -114,6 +114,18 @@ html, body {
   background: rgba(255,255,255,0.045); border-radius: 14px; padding: 10px 12px;
   min-height: 60px;
 }
+/* coroa do 1º/2º/3º lugar, no lugar da antiga medalha emoji — igual ao jogo. O box fica
+   sempre com o mesmo tamanho (mesmo vazio pra quem não é top 3), pra manter alinhada a
+   posição de todas as linhas */
+.card-coroa {
+  width: 20px; height: 20px; flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
+}
+.card-coroa svg { width: 100%; height: 100%; }
+.card-coroa.ouro   { color: #ffd700; filter: drop-shadow(0 0 6px rgba(255,215,0,0.9)) drop-shadow(0 0 2px #fff); }
+.card-coroa.prata  { color: #d9dee5; filter: drop-shadow(0 0 3px rgba(210,220,235,0.6)); }
+.card-coroa.bronze { color: #cd7f32; filter: drop-shadow(0 0 3px rgba(205,127,50,0.6)); }
+
 .card-pos {
   width: 34px; height: 34px; border-radius: 50%; flex: 0 0 auto;
   display: flex; align-items: center; justify-content: center;
@@ -129,12 +141,25 @@ html, body {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   font-weight: 800; color: #fff; font-size: 0.95em;
 }
+/* emblema grande da liga, do lado do avatar — igual ao jogo. Quem ainda não bateu a liga
+   Bronze (menos de 50 troféus) ganha um círculo preto escrito "sem liga" no lugar do escudo */
+.card-emblema {
+  width: 46px; height: 46px; flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
+}
+.card-emblema img { width: 100%; height: 100%; object-fit: contain; }
+.card-sem-liga {
+  width: 100%; height: 100%; border-radius: 50%;
+  background: #000; color: #fff; font-size: 0.62em; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  line-height: 1.15; padding: 2px;
+}
+
 .card-info { flex: 1 1 auto; min-width: 0; }
 .card-nome {
   font-weight: 700; font-size: 0.98em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.card-liga { font-size: 0.78em; color: #9aa0ae; display: flex; align-items: center; gap: 4px; margin-top: 2px; }
-.card-liga img { width: 16px; height: 16px; object-fit: contain; }
+.card-liga { font-size: 0.78em; color: #9aa0ae; margin-top: 2px; }
 .card-valor { flex: 0 0 auto; text-align: right; }
 .card-valor-num { font-weight: 900; font-size: 1.15em; color: #ffd166; line-height: 1; }
 .card-valor-label { font-size: 0.68em; color: #9aa0ae; font-weight: 700; letter-spacing: 0.5px; }
@@ -166,7 +191,6 @@ html, body {
   0%, 100% { box-shadow: 0 0 6px 1px rgba(205,127,50,0.45), 0 0 0 2px rgba(205,127,50,0.4) inset; }
   50% { box-shadow: 0 0 16px 4px rgba(205,127,50,0.9), 0 0 0 2px rgba(205,127,50,0.85) inset; }
 }
-.card-medalha { font-size: 1.3em; flex: 0 0 auto; }
 
 /* destaque de quando a busca encontra o jogador — pulso amarelo temporário,
    some sozinho depois de alguns segundos (igual o destaque do ranking no jogo) */
