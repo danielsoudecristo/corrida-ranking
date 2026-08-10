@@ -37,12 +37,43 @@ function getLigaPorTrofeus(trofeus) {
   return atual;
 }
 
-// mesmas funções de nome que o jogo já usa — só a primeira palavra do nome, sem acento/
-// símbolo, pra busca e exibição ficarem consistentes com o que aparece dentro do jogo
+// mesma função de nome que o jogo já usa — só a primeira palavra do nome, sem acento/
+// símbolo, pra busca e exibição ficarem consistentes com o que aparece dentro do jogo.
+// Se der um pedaço curto demais (tipo "E", "AR" — não identifica ninguém de verdade,
+// geralmente por causa de letras "decoradas" unicode que não contam como letra normal),
+// cai num plano B: pega tudo até o primeiro ESPAÇO de verdade, sem cortar em pontuação.
 function primeiraPalavraDoNome(usuario) {
-  const encontrado = (usuario || '').match(/[\p{L}\p{N}]+/u);
-  const primeira = encontrado ? encontrado[0] : (usuario || '');
+  const bruto = (usuario || '').trim();
+  const encontrado = bruto.match(/[\p{L}\p{N}]+/u);
+  let primeira = encontrado ? encontrado[0] : bruto;
+
+  if (primeira.length <= 3 && bruto.length > primeira.length) {
+    const ateOEspaco = bruto.split(/\s+/)[0];
+    const semSimbolosNasPontas = ateOEspaco.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
+    if (semSimbolosNasPontas.length > primeira.length) primeira = semSimbolosNasPontas;
+  }
   return primeira ? primeira.charAt(0).toUpperCase() + primeira.slice(1) : primeira;
+}
+
+// pega os nomes de exibição de uma LISTA inteira de uma vez e DESAMBIGUA quem bate no
+// mesmo primeiro nome — ex: "Daniel Barros" e "Daniel Fernandes" os dois virariam só
+// "Daniel"; aqui, quando isso acontece, cada um ganha a inicial da segunda palavra do nome
+// de verdade: "Daniel B." e "Daniel F." — só quem realmente colide ganha esse sufixo
+function nomesParaExibirComDesambiguacao(listaDeUsuarios) {
+  const base = listaDeUsuarios.map(primeiraPalavraDoNome);
+  const contagem = {};
+  base.forEach((n) => { const chave = n.toLowerCase(); contagem[chave] = (contagem[chave] || 0) + 1; });
+
+  return listaDeUsuarios.map((usuarioReal, i) => {
+    const nomeBase = base[i];
+    if (contagem[nomeBase.toLowerCase()] <= 1) return nomeBase;
+    const palavras = (usuarioReal || '').trim().split(/\s+/).filter(Boolean);
+    if (palavras.length > 1) {
+      const segundaLetra = (palavras[1].match(/[\p{L}\p{N}]/u) || [])[0];
+      if (segundaLetra) return `${nomeBase} ${segundaLetra.toUpperCase()}.`;
+    }
+    return nomeBase;
+  });
 }
 function normalizarBusca(txt) {
   return (txt || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -98,16 +129,16 @@ function renderizarLista(chave) {
   }
   const campoValor = chave === 'ligas' ? 'trofeus_total' : 'pontos';
   const labelValor = 'TROFÉUS';
-  container.innerHTML = linhas.map((j, i) => cardHtml(i + 1, j, campoValor, labelValor)).join('');
+  const nomes = nomesParaExibirComDesambiguacao(linhas.map((j) => j.usuario));
+  container.innerHTML = linhas.map((j, i) => cardHtml(i + 1, j, campoValor, labelValor, nomes[i])).join('');
   // depois de trocar o HTML, se já tinha uma busca ativa nesse ranking, reaplica o destaque
   reaplicarDestaqueSeTiver(chave);
 }
 
-function cardHtml(posicao, j, campoValor, labelValor) {
+function cardHtml(posicao, j, campoValor, labelValor, nomeExibido) {
   const liga = getLigaPorTrofeus(j.trofeus_total);
   const classeMedalha = posicao === 1 ? 'ouro' : posicao === 2 ? 'prata' : posicao === 3 ? 'bronze' : '';
   const medalha = posicao === 1 ? '🥇' : posicao === 2 ? '🥈' : posicao === 3 ? '🥉' : '';
-  const primeiroNome = primeiraPalavraDoNome(j.usuario);
   const iniciais = iniciaisDe(j.usuario);
   const valor = (Number(j[campoValor]) || 0).toLocaleString('pt-BR');
   const ligaHtml = liga
@@ -123,7 +154,7 @@ function cardHtml(posicao, j, campoValor, labelValor) {
       <div class="card-pos">${posicao}º</div>
       <div class="card-avatar">${fotoHtml}</div>
       <div class="card-info">
-        <div class="card-nome">@${primeiroNome}</div>
+        <div class="card-nome">${nomeExibido}</div>
         ${ligaHtml}
       </div>
       <div class="card-valor">
