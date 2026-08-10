@@ -83,6 +83,9 @@ function iniciaisDe(usuario) {
   return (p[0] || '?').toUpperCase();
 }
 
+// mesmo ícone de coroa (SVG) que o jogo usa no lugar da medalha do 1º/2º/3º lugar
+const SVG_COROA = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18l-1.4-8.2-4.6 3.4L12 6l-3 7.2-4.6-3.4L3 18z"/></svg>`;
+
 // guarda os dados já carregados de cada ranking, pra busca não precisar ir no banco de novo
 const cache = { diario: [], semanal: [], ligas: [] };
 
@@ -138,24 +141,30 @@ function renderizarLista(chave) {
 function cardHtml(posicao, j, campoValor, labelValor, nomeExibido) {
   const liga = getLigaPorTrofeus(j.trofeus_total);
   const classeMedalha = posicao === 1 ? 'ouro' : posicao === 2 ? 'prata' : posicao === 3 ? 'bronze' : '';
-  const medalha = posicao === 1 ? '🥇' : posicao === 2 ? '🥈' : posicao === 3 ? '🥉' : '';
+  // coroa no lugar da medalha — o div fica sempre presente (mesmo vazio) pra manter o
+  // alinhamento das linhas igual, seja ela top 3 ou não, igual no jogo
+  const coroaHtml = `<div class="card-coroa ${classeMedalha}">${classeMedalha ? SVG_COROA : ''}</div>`;
   const iniciais = iniciaisDe(j.usuario);
   const valor = (Number(j[campoValor]) || 0).toLocaleString('pt-BR');
-  const ligaHtml = liga
-    ? `<div class="card-liga"><img src="liga/${liga.icone}" alt="${liga.nome}" onerror="this.style.display='none'"> ${liga.nome}</div>`
-    : '';
+  // emblema grande da liga do lado do avatar, igual no jogo — quem ainda não bateu Bronze
+  // (menos de 50 troféus) ganha um círculo preto escrito "sem liga" no lugar do escudo
+  const emblemaHtml = liga
+    ? `<img src="liga/${liga.icone}" alt="${liga.nome}" onerror="this.style.display='none'">`
+    : `<div class="card-sem-liga">sem liga</div>`;
+  const ligaNomeHtml = liga ? `<div class="card-liga">${liga.nome}</div>` : '';
   const fotoHtml = j.foto
     ? `<img src="${j.foto}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
        <span class="card-avatar-fallback" style="display:none;">${iniciais}</span>`
     : `<span class="card-avatar-fallback" style="display:flex;">${iniciais}</span>`;
   return `
     <div class="card-jogador ${classeMedalha}" data-usuario="${(j.usuario || '').toLowerCase()}">
-      <div class="card-medalha">${medalha}</div>
+      ${coroaHtml}
       <div class="card-pos">${posicao}º</div>
       <div class="card-avatar">${fotoHtml}</div>
+      <div class="card-emblema">${emblemaHtml}</div>
       <div class="card-info">
         <div class="card-nome">${nomeExibido}</div>
-        ${ligaHtml}
+        ${ligaNomeHtml}
       </div>
       <div class="card-valor">
         <div class="card-valor-num">${valor}</div>
