@@ -76,6 +76,7 @@ async function carregarRanking(chave) {
       .from(nomeView)
       .select('*')
       .order(campoOrdenacao, { ascending: false })
+      .order('usuario', { ascending: true }) // desempate fixo (alfabético) entre quem tem a mesma pontuação — sem isso, o Postgres pode devolver os empatados em ordem diferente a cada consulta
       .limit(LIMITE_LINHAS);
     if (error) throw error;
     cache[chave] = data || [];
