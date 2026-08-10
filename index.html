@@ -21,6 +21,7 @@
     <button class="aba ativa" data-aba="diario" role="tab" aria-selected="true">🏆 DIÁRIO</button>
     <button class="aba" data-aba="semanal" role="tab" aria-selected="false">📅 SEMANAL</button>
     <button class="aba" data-aba="ligas" role="tab" aria-selected="false">🏅 LIGAS</button>
+    <button class="aba" data-aba="moedas" role="tab" aria-selected="false">🪙 MOEDAS</button>
   </nav>
 
   <main class="conteudo">
@@ -64,6 +65,20 @@
       <p class="busca-resultado" id="busca-ligas-resultado"></p>
       <div class="lista-ranking" id="lista-ligas">
         <p class="estado-info">Carregando ranking de ligas...</p>
+      </div>
+    </section>
+
+    <!-- ===== RANKING DE MOEDAS (semanal — reseta toda segunda, igual o Semanal) ===== -->
+    <section class="painel-ranking" id="painel-moedas" data-ranking="moedas">
+      <div class="info-periodo" id="info-periodo-moedas"></div>
+      <div class="busca-wrap">
+        <span class="busca-icone">🔎</span>
+        <input type="text" class="busca-input" id="busca-moedas" placeholder="Pesquisar @usuário nas Moedas" autocomplete="off">
+        <button class="busca-limpar" id="busca-moedas-limpar" title="Limpar busca" aria-label="Limpar busca">✕</button>
+      </div>
+      <p class="busca-resultado" id="busca-moedas-resultado"></p>
+      <div class="lista-ranking" id="lista-moedas">
+        <p class="estado-info">Carregando ranking de moedas...</p>
       </div>
     </section>
 
