@@ -23,6 +23,7 @@
     <button class="aba" data-aba="mensal" role="tab" aria-selected="false">🗓️ MENSAL</button>
     <button class="aba" data-aba="ligas" role="tab" aria-selected="false">🏅 LIGAS</button>
     <button class="aba" data-aba="moedas" role="tab" aria-selected="false">🪙 MOEDAS</button>
+    <button class="aba" data-aba="comofunciona" role="tab" aria-selected="false">❓ COMO FUNCIONA</button>
   </nav>
 
   <main class="conteudo">
@@ -96,6 +97,73 @@
         <p class="estado-info">Carregando ranking de moedas...</p>
       </div>
     </section>
+
+    <!-- ===== COMO FUNCIONA ===== -->
+    <section class="painel-ranking" id="painel-comofunciona" data-ranking="comofunciona">
+
+      <div class="cf-intro">
+        <div class="cf-intro-emoji">🏁</div>
+        <h2 class="cf-intro-titulo">Todo mundo pode vencer</h2>
+        <p class="cf-intro-texto">
+          Aqui não é só quem manda presente que compete — <strong>qualquer pessoa que interage
+          com a live já entra na corrida</strong>. Curtir, seguir e compartilhar já dão impulso
+          de verdade no seu carro, e digitar comandos certos no chat na hora certa (tipo se
+          proteger ou congelar quem tá te ultrapassando) pode decidir a corrida sozinho — de
+          graça, só com estratégia. Presente ajuda e destrava carros especiais, mas o 1º lugar
+          é de quem jogar mais esperto, não de quem gastar mais.
+        </p>
+      </div>
+
+      <div class="cf-bloco">
+        <h3 class="cf-bloco-titulo">🎮 Como entrar na corrida</h3>
+        <div class="cf-passos">
+          <div class="cf-passo">
+            <div class="cf-passo-emoji">💬</div>
+            <div class="cf-passo-texto"><strong>Comente qualquer coisa</strong> no vídeo da live e seu carro já aparece na pista, correndo.</div>
+          </div>
+          <div class="cf-passo">
+            <div class="cf-passo-emoji">❤️</div>
+            <div class="cf-passo-texto"><strong>Curta, siga e compartilhe</strong> — cada ação dá um impulso de verdade, sem custar nada.</div>
+          </div>
+          <div class="cf-passo">
+            <div class="cf-passo-emoji">🛡️</div>
+            <div class="cf-passo-texto">Digite <strong>"proteção"</strong> no chat pra ficar imune por alguns segundos, ou <strong>"congelar @nome"</strong> pra travar quem tá te ameaçando — os dois custam só os pontos que você ganha correndo, nada de dinheiro.</div>
+          </div>
+          <div class="cf-passo">
+            <div class="cf-passo-emoji">🎁</div>
+            <div class="cf-passo-texto">Presentes dão um impulso mais forte (quanto maior o presente, mais forte e mais demorado) e, acumulando na semana, destravam <strong>carros VIP</strong> com habilidades exclusivas.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cf-bloco">
+        <h3 class="cf-bloco-titulo">🚗 Os 13 carros VIP</h3>
+        <p class="cf-bloco-sub">Toque em um carro pra ver a habilidade dele</p>
+        <div class="cf-carros-grid" id="cf-carros-grid"></div>
+      </div>
+
+      <div class="cf-bloco">
+        <h3 class="cf-bloco-titulo">🏆 Os rankings</h3>
+        <div class="cf-passos">
+          <div class="cf-passo"><div class="cf-passo-emoji">📅</div><div class="cf-passo-texto"><strong>Diário</strong> — zera toda meia-noite.</div></div>
+          <div class="cf-passo"><div class="cf-passo-emoji">🗓️</div><div class="cf-passo-texto"><strong>Semanal</strong> — zera toda segunda-feira.</div></div>
+          <div class="cf-passo"><div class="cf-passo-emoji">📆</div><div class="cf-passo-texto"><strong>Mensal</strong> — zera todo dia 1º do mês.</div></div>
+          <div class="cf-passo"><div class="cf-passo-emoji">👑</div><div class="cf-passo-texto"><strong>Ligas</strong> — permanente, nunca zera. É o que decide quais carros VIP você pode destravar.</div></div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- modal de detalhe do carro (some por padrão, abre ao tocar num carro do grid acima) -->
+    <div class="cf-modal-fundo" id="cf-modal-fundo">
+      <div class="cf-modal-card" id="cf-modal-card">
+        <button class="cf-modal-fechar" id="cf-modal-fechar" aria-label="Fechar">✕</button>
+        <img class="cf-modal-imagem" id="cf-modal-imagem" alt="">
+        <div class="cf-modal-nome" id="cf-modal-nome"></div>
+        <div class="cf-modal-requisito" id="cf-modal-requisito"></div>
+        <div class="cf-modal-habilidade" id="cf-modal-habilidade"></div>
+      </div>
+    </div>
 
   </main>
 
