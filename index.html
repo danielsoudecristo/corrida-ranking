@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Corrida — Ranking Oficial</title>
-<meta name="description" content="Ranking oficial da live de corrida — diário, semanal e ligas.">
+<meta name="description" content="Ranking oficial da live de corrida — diário, semanal, mensal e ligas.">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -20,6 +20,7 @@
   <nav class="abas" role="tablist" aria-label="Escolha o ranking">
     <button class="aba ativa" data-aba="diario" role="tab" aria-selected="true">🏆 DIÁRIO</button>
     <button class="aba" data-aba="semanal" role="tab" aria-selected="false">📅 SEMANAL</button>
+    <button class="aba" data-aba="mensal" role="tab" aria-selected="false">🗓️ MENSAL</button>
     <button class="aba" data-aba="ligas" role="tab" aria-selected="false">🏅 LIGAS</button>
     <button class="aba" data-aba="moedas" role="tab" aria-selected="false">🪙 MOEDAS</button>
   </nav>
@@ -51,6 +52,20 @@
       <p class="busca-resultado" id="busca-semanal-resultado"></p>
       <div class="lista-ranking" id="lista-semanal">
         <p class="estado-info">Carregando ranking semanal...</p>
+      </div>
+    </section>
+
+    <!-- ===== RANKING MENSAL ===== -->
+    <section class="painel-ranking" id="painel-mensal" data-ranking="mensal">
+      <div class="info-periodo" id="info-periodo-mensal"></div>
+      <div class="busca-wrap">
+        <span class="busca-icone">🔎</span>
+        <input type="text" class="busca-input" id="busca-mensal" placeholder="Pesquisar @usuário no Mensal" autocomplete="off">
+        <button class="busca-limpar" id="busca-mensal-limpar" title="Limpar busca" aria-label="Limpar busca">✕</button>
+      </div>
+      <p class="busca-resultado" id="busca-mensal-resultado"></p>
+      <div class="lista-ranking" id="lista-mensal">
+        <p class="estado-info">Carregando ranking mensal...</p>
       </div>
     </section>
 
