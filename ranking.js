@@ -294,6 +294,96 @@ function configurarAbas() {
   });
 }
 
+// ===================================================================
+// COMO FUNCIONA — dados dos 13 carros VIP (mesmo texto/regra do jogo,
+// CARROS_VIP_PADRAO no server.js) + grid clicável + modal de detalhe.
+// Isso aqui é conteúdo ESTÁTICO (não vem do Supabase) — só uma explicação
+// bonita pra quem nunca jogou entender rapidinho.
+// ===================================================================
+const CARROS_VIP_INFO = [
+  { nome: 'Street', preco: 1000, imagem: 'Street.png',
+    resumo: 'Turbo grátis extra',
+    habilidade: '🟢 <strong>Nitro Extra</strong> — sempre que manda um presente de 99 moedas ou mais, ganha alguns segundos de turbo DE GRAÇA, por cima do impulso normal do presente.' },
+  { nome: 'Turbo', preco: 2500, imagem: 'Turbo.png',
+    resumo: 'Dobra a duração do impulso',
+    habilidade: '🟡 <strong>Turbo Prolongado</strong> — o impulso que acabou de ganhar com o presente dura o DOBRO do tempo normal.' },
+  { nome: 'Apex', preco: 5000, imagem: 'Apex.png',
+    resumo: 'Trava quem tá logo atrás',
+    habilidade: '🟢 <strong>Trava a Perseguição</strong> — trava por alguns segundos os 2 carros logo atrás dele na classificação, protegendo a posição atual.' },
+  { nome: 'Phantom', preco: 10000, imagem: 'Phantom.png',
+    resumo: 'Escudo automático',
+    habilidade: '⚪ <strong>Escudo Fantasma</strong> — ganha um escudo de 20 segundos na hora, sem precisar digitar nada no chat.' },
+  { nome: 'Vortex', preco: 20000, imagem: 'Vortex.png',
+    resumo: 'Desacelera quem tá perto',
+    habilidade: '🟣 <strong>Redemoinho</strong> — desacelera pra quase parado todo mundo que estiver fisicamente perto dele na pista.' },
+  { nome: 'Hard Core', preco: 40000, imagem: 'Hard Core.png',
+    resumo: 'Congela TODOS os outros',
+    habilidade: '🔴 <strong>Muro de Gelo</strong> — congela todos os outros carros da pista de uma vez só. O poder mais bruto dos 6 primeiros.' },
+  { nome: 'Raptor', preco: 60000, ligaMinima: 'Prata', imagem: 'Raptor.png',
+    resumo: 'Reflete qualquer poder',
+    habilidade: '🦖 <strong>Reflexo</strong> — por um tempo, qualquer poder usado CONTRA ele (congelar, desacelerar) volta pra quem usou.' },
+  { nome: 'Raven', preco: 80000, ligaMinima: 'Ouro', imagem: 'Raven.png',
+    resumo: 'Escudo + reflete congelamento',
+    habilidade: '🦅 <strong>Contra-Ataque</strong> — ganha escudo E, além disso, qualquer tentativa de CONGELAR ele volta pra quem tentou (que fica congelado no lugar dele).' },
+  { nome: 'Fury', preco: 110000, ligaMinima: 'Diamante', imagem: 'Fury.png',
+    resumo: 'Copia o último impulso da pista',
+    habilidade: '🔥 <strong>Cópia</strong> — copia o último impulso que aconteceu em QUALQUER carro da pista (de qualquer pessoa) e aplica esse mesmo impulso nele.' },
+  { nome: 'Venom', preco: 150000, ligaMinima: 'Mestre', imagem: 'Venom.png',
+    resumo: 'Joga os 2 da frente pra trás',
+    habilidade: '🐍 <strong>Emboscada</strong> — joga os 2 carros logo à frente dele de volta pro começo da volta 1, não importa em que volta eles estivessem, e passa na frente dos dois.' },
+  { nome: 'Shadow', preco: 200000, ligaMinima: 'Campeão', imagem: 'Shadow.png',
+    resumo: 'Paralisa até ultrapassar',
+    habilidade: '🌑 <strong>Eclipse</strong> — paralisa TODOS os outros carros no lugar. Cada um só se solta quando o Shadow realmente ultrapassa ele.' },
+  { nome: 'Storm', preco: 260000, ligaMinima: 'Lendas', imagem: 'Storm.png',
+    resumo: '+2 voltas na hora',
+    habilidade: '⚡ <strong>Tempestade</strong> — avança 2 voltas inteiras na hora. Exige presente de 299 moedas ou mais (o dobro do normal).' },
+  { nome: 'Legend', preco: 350000, ligaMinima: 'Leoncs', imagem: 'Legend.png', destaque: true,
+    resumo: 'Troca de lugar com o líder',
+    habilidade: '🦁 <strong>Lenda</strong> — troca de posição direto com quem está em 1º lugar agora. O carro mais raro e mais forte do jogo.' },
+];
+
+function cfCarroCardHtml(carro, indice) {
+  const coroa = carro.destaque ? ' <span class="coroa">👑</span>' : '';
+  const selo = carro.ligaMinima
+    ? `<img class="cf-carro-selo" src="liga/${carro.ligaMinima}.png" alt="${carro.ligaMinima}" onerror="this.style.display='none'">`
+    : '';
+  return `
+    <button type="button" class="cf-carro-card ${carro.destaque ? 'destaque' : ''}" data-indice="${indice}">
+      ${selo}
+      <img class="cf-carro-imagem" src="${carro.imagem}" alt="${carro.nome}" onerror="this.style.opacity='0.15'">
+      <div class="cf-carro-nome">${carro.nome}${coroa}</div>
+      <div class="cf-carro-resumo">${carro.resumo}</div>
+      <div class="cf-carro-toque">TOQUE PRA VER</div>
+    </button>`;
+}
+
+function abrirModalCarro(carro) {
+  document.getElementById('cf-modal-imagem').src = carro.imagem;
+  document.getElementById('cf-modal-imagem').alt = carro.nome;
+  document.getElementById('cf-modal-nome').innerHTML = carro.nome + (carro.destaque ? ' 👑' : '');
+  const precoFmt = carro.preco.toLocaleString('pt-BR');
+  document.getElementById('cf-modal-requisito').textContent = carro.ligaMinima
+    ? `🏅 Liga ${carro.ligaMinima}+ e 🪙 ${precoFmt} moedas na semana`
+    : `🪙 ${precoFmt} moedas na semana`;
+  document.getElementById('cf-modal-habilidade').innerHTML = carro.habilidade;
+  document.getElementById('cf-modal-fundo').classList.add('aberto');
+}
+function fecharModalCarro() {
+  document.getElementById('cf-modal-fundo').classList.remove('aberto');
+}
+
+function prepararComoFunciona() {
+  const grid = document.getElementById('cf-carros-grid');
+  grid.innerHTML = CARROS_VIP_INFO.map(cfCarroCardHtml).join('');
+  grid.querySelectorAll('.cf-carro-card').forEach((el) => {
+    el.addEventListener('click', () => abrirModalCarro(CARROS_VIP_INFO[Number(el.dataset.indice)]));
+  });
+  document.getElementById('cf-modal-fechar').addEventListener('click', fecharModalCarro);
+  document.getElementById('cf-modal-fundo').addEventListener('click', (e) => {
+    if (e.target.id === 'cf-modal-fundo') fecharModalCarro(); // clicou fora do card, fecha
+  });
+}
+
 // ---------------------------------------------------------------------------
 // início
 // ---------------------------------------------------------------------------
@@ -302,6 +392,7 @@ async function iniciar() {
   ['diario', 'semanal', 'mensal', 'ligas', 'moedas'].forEach(configurarBusca);
   atualizarContagens();
   setInterval(atualizarContagens, 30000); // atualiza a contagem regressiva a cada 30s
+  prepararComoFunciona(); // conteúdo estático, monta uma vez só, não depende do Supabase
 
   const statusEl = document.getElementById('status-conexao');
   const resultados = await Promise.all([
