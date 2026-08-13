@@ -18,17 +18,17 @@ const SUPABASE_ANON_KEY = 'sb_publishable_Xo3Le8kauzM7VKBT2PVGRQ_KK2HIoc6';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// mesma tabela de ligas do ligas.js do jogo (Bronze 50 até Leoncs 100.000) — se um dia
+// mesma tabela de ligas do ligas.js do jogo (Bronze 50 até Leoncs 50.000) — se um dia
 // mudar os valores lá no jogo, troque aqui também pra manter os dois batendo
 const LIGAS = [
   { nome: 'Bronze', trofeus: 50, icone: 'Bronze.png' },
-  { nome: 'Prata', trofeus: 1000, icone: 'Prata.png' },
-  { nome: 'Ouro', trofeus: 3000, icone: 'Ouro.png' },
-  { nome: 'Diamante', trofeus: 8000, icone: 'Diamante.png' },
-  { nome: 'Mestre', trofeus: 18000, icone: 'Mestre.png' },
-  { nome: 'Campeão', trofeus: 35000, icone: 'Campeão.png' },
-  { nome: 'Lendas', trofeus: 60000, icone: 'Lendas.png' },
-  { nome: 'Leoncs', trofeus: 100000, icone: 'Leoncs.png' },
+  { nome: 'Prata', trofeus: 500, icone: 'Prata.png' },
+  { nome: 'Ouro', trofeus: 1500, icone: 'Ouro.png' },
+  { nome: 'Diamante', trofeus: 4000, icone: 'Diamante.png' },
+  { nome: 'Mestre', trofeus: 9000, icone: 'Mestre.png' },
+  { nome: 'Campeão', trofeus: 17500, icone: 'Campeão.png' },
+  { nome: 'Lendas', trofeus: 30000, icone: 'Lendas.png' },
+  { nome: 'Leoncs', trofeus: 50000, icone: 'Leoncs.png' },
 ];
 function getLigaPorTrofeus(trofeus) {
   if (trofeus < LIGAS[0].trofeus) return null;
@@ -87,7 +87,7 @@ function iniciaisDe(usuario) {
 const SVG_COROA = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18l-1.4-8.2-4.6 3.4L12 6l-3 7.2-4.6-3.4L3 18z"/></svg>`;
 
 // guarda os dados já carregados de cada ranking, pra busca não precisar ir no banco de novo
-const cache = { diario: [], semanal: [], ligas: [], moedas: [] };
+const cache = { diario: [], semanal: [], mensal: [], ligas: [], moedas: [] };
 
 // ---------------------------------------------------------------------------
 // carregamento dos 3 rankings
@@ -100,10 +100,10 @@ const LIMITE_LINHAS = 5000;
 async function carregarRanking(chave) {
   const container = document.getElementById(`lista-${chave}`);
   try {
-    const nomeView = chave === 'diario' ? 'ranking_diario' : chave === 'semanal' ? 'ranking_semanal' : chave === 'moedas' ? 'ranking_moedas' : 'ranking_ligas';
-    // campo usado pra ordenar CADA ranking — ligas usa o troféu permanente da liga; diário
-    // e semanal usam "pontos" (que já é o troféu do período certo, calculado pela view);
-    // moedas usa "moedas_semana" (moedas de presente da semana atual, zera toda segunda)
+    const nomeView = chave === 'diario' ? 'ranking_diario' : chave === 'semanal' ? 'ranking_semanal' : chave === 'mensal' ? 'ranking_mensal' : chave === 'moedas' ? 'ranking_moedas' : 'ranking_ligas';
+    // campo usado pra ordenar CADA ranking — ligas usa o troféu permanente da liga; diário,
+    // semanal e mensal usam "pontos" (que já é o troféu do período certo, calculado pela
+    // view); moedas usa "moedas_semana" (moedas de presente da semana atual, zera toda segunda)
     const campoOrdenacao = chave === 'ligas' ? 'trofeus_total' : chave === 'moedas' ? 'moedas_semana' : 'pontos';
     // pede a ordenação AQUI, na consulta — não basta a VIEW já ter "order by" internamente:
     // sem pedir explicitamente na consulta, o Postgres não garante manter essa ordem
@@ -180,6 +180,7 @@ function cardHtml(posicao, j, campoValor, labelValor, nomeExibido) {
 // ---------------------------------------------------------------------------
 function atualizarContagens() {
   const agora = new Date();
+  const NOMES_MESES_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
   const meiaNoite = new Date(agora);
   meiaNoite.setDate(agora.getDate() + 1);
@@ -187,9 +188,10 @@ function atualizarContagens() {
   const msAteMeiaNoite = meiaNoite - agora;
   const hDia = Math.floor(msAteMeiaNoite / 3600000);
   const mDia = Math.floor((msAteMeiaNoite % 3600000) / 60000);
-  document.getElementById('info-periodo-diario').textContent = `⏳ Restam ${hDia}h ${mDia}min`;
+  document.getElementById('info-periodo-diario').textContent = `Dia ${agora.getDate()} · ⏳ Restam ${hDia}h ${mDia}min`;
 
   const diaSemana = agora.getDay(); // 0=domingo
+  const NOMES_DIAS_SEMANA_PT = ['Domingo', 'Segunda-Feira', 'Terça-Feira', 'Quarta-Feira', 'Quinta-Feira', 'Sexta-Feira', 'Sábado'];
   const diasAteSegunda = diaSemana === 1 ? 7 : ((8 - diaSemana) % 7) || 7;
   const proximaSegunda = new Date(agora);
   proximaSegunda.setDate(agora.getDate() + diasAteSegunda);
@@ -197,10 +199,18 @@ function atualizarContagens() {
   const msAteSegunda = proximaSegunda - agora;
   const dSemana = Math.floor(msAteSegunda / 86400000);
   const hSemana = Math.floor((msAteSegunda % 86400000) / 3600000);
-  document.getElementById('info-periodo-semanal').textContent = `⏳ Restam ${dSemana}d ${hSemana}h`;
+  document.getElementById('info-periodo-semanal').textContent = `${NOMES_DIAS_SEMANA_PT[diaSemana]} · ⏳ Restam ${dSemana}d ${hSemana}h`;
   // moedas reseta na MESMA segunda-feira que o semanal — mesmo texto
   const elMoedas = document.getElementById('info-periodo-moedas');
-  if (elMoedas) elMoedas.textContent = `⏳ Restam ${dSemana}d ${hSemana}h`;
+  if (elMoedas) elMoedas.textContent = `${NOMES_DIAS_SEMANA_PT[diaSemana]} · ⏳ Restam ${dSemana}d ${hSemana}h`;
+
+  // mensal reseta no dia 1º do próximo mês, meia-noite — relógio PRÓPRIO, igual o jogo
+  const proximoMes = new Date(agora.getFullYear(), agora.getMonth() + 1, 1, 0, 0, 0, 0);
+  const msAteProximoMes = proximoMes - agora;
+  const dMes = Math.floor(msAteProximoMes / 86400000);
+  const hMes = Math.floor((msAteProximoMes % 86400000) / 3600000);
+  const elMensal = document.getElementById('info-periodo-mensal');
+  if (elMensal) elMensal.textContent = `${NOMES_MESES_PT[agora.getMonth()]} · ⏳ Restam ${dMes}d ${hMes}h`;
 }
 
 // ---------------------------------------------------------------------------
@@ -289,7 +299,7 @@ function configurarAbas() {
 // ---------------------------------------------------------------------------
 async function iniciar() {
   configurarAbas();
-  ['diario', 'semanal', 'ligas', 'moedas'].forEach(configurarBusca);
+  ['diario', 'semanal', 'mensal', 'ligas', 'moedas'].forEach(configurarBusca);
   atualizarContagens();
   setInterval(atualizarContagens, 30000); // atualiza a contagem regressiva a cada 30s
 
@@ -297,6 +307,7 @@ async function iniciar() {
   const resultados = await Promise.all([
     carregarRanking('diario'),
     carregarRanking('semanal'),
+    carregarRanking('mensal'),
     carregarRanking('ligas'),
     carregarRanking('moedas'),
   ]);
