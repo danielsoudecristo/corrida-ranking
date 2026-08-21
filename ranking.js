@@ -103,7 +103,8 @@ async function carregarRanking(chave) {
     const nomeView = chave === 'diario' ? 'ranking_diario' : chave === 'semanal' ? 'ranking_semanal' : chave === 'mensal' ? 'ranking_mensal' : chave === 'moedas' ? 'ranking_moedas' : 'ranking_ligas';
     // campo usado pra ordenar CADA ranking — ligas usa o troféu permanente da liga; diário,
     // semanal e mensal usam "pontos" (que já é o troféu do período certo, calculado pela
-    // view); moedas usa "moedas_semana" (moedas de presente da semana atual, zera toda segunda)
+    // view); moedas usa "moedas_semana" (nome antigo da coluna, mantido só por compatibilidade
+    // — na prática hoje é PERMANENTE, nunca reseta, igual troféu total)
     const campoOrdenacao = chave === 'ligas' ? 'trofeus_total' : chave === 'moedas' ? 'moedas_semana' : 'pontos';
     // pede a ordenação AQUI, na consulta — não basta a VIEW já ter "order by" internamente:
     // sem pedir explicitamente na consulta, o Postgres não garante manter essa ordem
@@ -200,9 +201,10 @@ function atualizarContagens() {
   const dSemana = Math.floor(msAteSegunda / 86400000);
   const hSemana = Math.floor((msAteSegunda % 86400000) / 3600000);
   document.getElementById('info-periodo-semanal').textContent = `${NOMES_DIAS_SEMANA_PT[diaSemana]} · ⏳ Restam ${dSemana}d ${hSemana}h`;
-  // moedas reseta na MESMA segunda-feira que o semanal — mesmo texto
+  // moedas é PERMANENTE agora (nunca reseta) — sem contagem regressiva nenhuma, mesmo texto
+  // fixo que o Ranking de Melhores Ligas já usa (que também é permanente)
   const elMoedas = document.getElementById('info-periodo-moedas');
-  if (elMoedas) elMoedas.textContent = `${NOMES_DIAS_SEMANA_PT[diaSemana]} · ⏳ Restam ${dSemana}d ${hSemana}h`;
+  if (elMoedas) elMoedas.textContent = '🏆 Ranking permanente — nunca reseta';
 
   // mensal reseta no dia 1º do próximo mês, meia-noite — relógio PRÓPRIO, igual o jogo
   const proximoMes = new Date(agora.getFullYear(), agora.getMonth() + 1, 1, 0, 0, 0, 0);
@@ -363,8 +365,8 @@ function abrirModalCarro(carro) {
   document.getElementById('cf-modal-nome').innerHTML = carro.nome + (carro.destaque ? ' 👑' : '');
   const precoFmt = carro.preco.toLocaleString('pt-BR');
   document.getElementById('cf-modal-requisito').textContent = carro.ligaMinima
-    ? `🏅 Liga ${carro.ligaMinima}+ e 🪙 ${precoFmt} moedas na semana`
-    : `🪙 ${precoFmt} moedas na semana`;
+    ? `🏅 Liga ${carro.ligaMinima}+ e 🪙 ${precoFmt} moedas`
+    : `🪙 ${precoFmt} moedas`;
   document.getElementById('cf-modal-habilidade').innerHTML = carro.habilidade;
   document.getElementById('cf-modal-fundo').classList.add('aberto');
 }
