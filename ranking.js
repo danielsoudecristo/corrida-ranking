@@ -103,8 +103,9 @@ async function carregarRanking(chave) {
     const nomeView = chave === 'diario' ? 'ranking_diario' : chave === 'semanal' ? 'ranking_semanal' : chave === 'mensal' ? 'ranking_mensal' : chave === 'moedas' ? 'ranking_moedas' : 'ranking_ligas';
     // campo usado pra ordenar CADA ranking — ligas usa o troféu permanente da liga; diário,
     // semanal e mensal usam "pontos" (que já é o troféu do período certo, calculado pela
-    // view); moedas usa "moedas_semana" (nome antigo da coluna, mantido só por compatibilidade
-    // — na prática hoje é PERMANENTE, nunca reseta, igual troféu total)
+    // view); a aba "🪙 PONTOS" (chave interna "moedas", por compatibilidade com a coluna
+    // "moedas_semana" já existente no banco — nome antigo, mantido só aqui por baixo dos
+    // panos) é PERMANENTE, nunca reseta, igual troféu total.
     const campoOrdenacao = chave === 'ligas' ? 'trofeus_total' : chave === 'moedas' ? 'moedas_semana' : 'pontos';
     // pede a ordenação AQUI, na consulta — não basta a VIEW já ter "order by" internamente:
     // sem pedir explicitamente na consulta, o Postgres não garante manter essa ordem
@@ -133,7 +134,7 @@ function renderizarLista(chave) {
     return;
   }
   const campoValor = chave === 'ligas' ? 'trofeus_total' : chave === 'moedas' ? 'moedas_semana' : 'pontos';
-  const labelValor = chave === 'moedas' ? 'MOEDAS' : 'TROFÉUS';
+  const labelValor = chave === 'moedas' ? 'PONTOS' : 'TROFÉUS';
   const nomes = nomesParaExibirComDesambiguacao(linhas.map((j) => j.usuario));
   container.innerHTML = linhas.map((j, i) => cardHtml(i + 1, j, campoValor, labelValor, nomes[i])).join('');
   // depois de trocar o HTML, se já tinha uma busca ativa nesse ranking, reaplica o destaque
