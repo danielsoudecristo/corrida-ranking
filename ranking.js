@@ -306,7 +306,7 @@ function configurarAbas() {
 const CARROS_VIP_INFO = [
   { nome: 'Street', preco: 1000, imagem: 'Street.png',
     resumo: 'Turbo grátis extra',
-    habilidade: '🟢 <strong>Nitro Extra</strong> — sempre que manda um presente de 99 moedas ou mais, ganha alguns segundos de turbo DE GRAÇA, por cima do impulso normal do presente.' },
+    habilidade: '🟢 <strong>Nitro Extra</strong> — sempre que manda um presente de 99 de Energia ou mais, ganha alguns segundos de turbo DE GRAÇA, por cima do impulso normal do presente.' },
   { nome: 'Turbo', preco: 2500, imagem: 'Turbo.png',
     resumo: 'Dobra a duração do impulso',
     habilidade: '🟡 <strong>Turbo Prolongado</strong> — o impulso que acabou de ganhar com o presente dura o DOBRO do tempo normal.' },
@@ -339,7 +339,7 @@ const CARROS_VIP_INFO = [
     habilidade: '🌑 <strong>Eclipse</strong> — paralisa TODOS os outros carros no lugar. Cada um só se solta quando o Shadow realmente ultrapassa ele.' },
   { nome: 'Storm', preco: 260000, ligaMinima: 'Lendas', imagem: 'Storm.png',
     resumo: '+2 voltas na hora',
-    habilidade: '⚡ <strong>Tempestade</strong> — avança 2 voltas inteiras na hora. Exige presente de 299 moedas ou mais (o dobro do normal).' },
+    habilidade: '⚡ <strong>Tempestade</strong> — avança 2 voltas inteiras na hora. Exige presente de 299 de Energia ou mais (o dobro do normal).' },
   { nome: 'Legend', preco: 350000, ligaMinima: 'Leoncs', imagem: 'Legend.png', destaque: true,
     resumo: 'Troca de lugar com o líder',
     habilidade: '🦁 <strong>Lenda</strong> — troca de posição direto com quem está em 1º lugar agora. O carro mais raro e mais forte do jogo.' },
@@ -366,8 +366,8 @@ function abrirModalCarro(carro) {
   document.getElementById('cf-modal-nome').innerHTML = carro.nome + (carro.destaque ? ' 👑' : '');
   const precoFmt = carro.preco.toLocaleString('pt-BR');
   document.getElementById('cf-modal-requisito').textContent = carro.ligaMinima
-    ? `🏅 Liga ${carro.ligaMinima}+ e 🪙 ${precoFmt} moedas`
-    : `🪙 ${precoFmt} moedas`;
+    ? `🏅 Liga ${carro.ligaMinima}+ e ⚡ ${precoFmt} Energia`
+    : `⚡ ${precoFmt} Energia`;
   document.getElementById('cf-modal-habilidade').innerHTML = carro.habilidade;
   document.getElementById('cf-modal-fundo').classList.add('aberto');
 }
