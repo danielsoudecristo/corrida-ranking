@@ -113,18 +113,25 @@
       </div>
     </section>
 
-    <!-- modal de detalhe do carro (some por padrão, abre ao tocar num carro do grid acima) -->
-    <div class="cf-modal-fundo" id="cf-modal-fundo">
-      <div class="cf-modal-card" id="cf-modal-card">
-        <button class="cf-modal-fechar" id="cf-modal-fechar" aria-label="Fechar">✕</button>
-        <img class="cf-modal-imagem" id="cf-modal-imagem" alt="">
-        <div class="cf-modal-nome" id="cf-modal-nome"></div>
-        <div class="cf-modal-requisito" id="cf-modal-requisito"></div>
-        <div class="cf-modal-habilidade" id="cf-modal-habilidade"></div>
-      </div>
-    </div>
-
   </main>
+    </div>
+  </div>
+
+  <!-- modal de detalhe do carro (some por padrão, abre ao tocar num carro do grid do Menu
+       de Ajuda) — FICA FORA das janelas de ranking/menu de propósito: essas janelas usam
+       position:fixed + animação de transform, que criam uma "camada" própria — qualquer
+       coisa DENTRO delas fica presa nessa camada, mesmo com z-index alto, e não consegue
+       aparecer por cima de outra janela irmã (foi exatamente esse bug: o modal só
+       aparecia depois de fechar o Menu de Ajuda, porque ele tava preso dentro da janela
+       de ranking). Ficando solto aqui fora, no nível principal da página, ele compete de
+       igual pra igual com as outras janelas e sempre aparece por cima, como devia. -->
+  <div class="cf-modal-fundo" id="cf-modal-fundo">
+    <div class="cf-modal-card" id="cf-modal-card">
+      <button class="cf-modal-fechar" id="cf-modal-fechar" aria-label="Fechar">✕</button>
+      <img class="cf-modal-imagem" id="cf-modal-imagem" alt="">
+      <div class="cf-modal-nome" id="cf-modal-nome"></div>
+      <div class="cf-modal-requisito" id="cf-modal-requisito"></div>
+      <div class="cf-modal-habilidade" id="cf-modal-habilidade"></div>
     </div>
   </div>
 
