@@ -19,11 +19,11 @@
 
   <nav class="abas" role="tablist" aria-label="Escolha o ranking">
     <button class="aba ativa" data-aba="diario" role="tab" aria-selected="true">🏆 DIÁRIO</button>
+    <button class="aba" data-aba="diaAnterior" role="tab" aria-selected="false">📋 DIA ANTERIOR</button>
     <button class="aba" data-aba="semanal" role="tab" aria-selected="false">📅 SEMANAL</button>
     <button class="aba" data-aba="mensal" role="tab" aria-selected="false">🗓️ MENSAL</button>
     <button class="aba" data-aba="ligas" role="tab" aria-selected="false">🏅 LIGAS</button>
     <button class="aba" data-aba="moedas" role="tab" aria-selected="false">🪙 PONTOS</button>
-    <button class="aba" data-aba="comofunciona" role="tab" aria-selected="false">❓ COMO FUNCIONA</button>
   </nav>
 
   <main class="conteudo">
@@ -39,6 +39,20 @@
       <p class="busca-resultado" id="busca-diario-resultado"></p>
       <div class="lista-ranking" id="lista-diario">
         <p class="estado-info">Carregando ranking diário...</p>
+      </div>
+    </section>
+
+    <!-- ===== RANKING DO DIA ANTERIOR ===== -->
+    <section class="painel-ranking" id="painel-diaAnterior" data-ranking="diaAnterior">
+      <div class="info-periodo" id="info-periodo-diaAnterior"></div>
+      <div class="busca-wrap">
+        <span class="busca-icone">🔎</span>
+        <input type="text" class="busca-input" id="busca-diaAnterior" placeholder="Pesquisar @usuário no Dia Anterior" autocomplete="off">
+        <button class="busca-limpar" id="busca-diaAnterior-limpar" title="Limpar busca" aria-label="Limpar busca">✕</button>
+      </div>
+      <p class="busca-resultado" id="busca-diaAnterior-resultado"></p>
+      <div class="lista-ranking" id="lista-diaAnterior">
+        <p class="estado-info">Carregando ranking do dia anterior...</p>
       </div>
     </section>
 
@@ -96,109 +110,6 @@
       <div class="lista-ranking" id="lista-moedas">
         <p class="estado-info">Carregando ranking de pontos...</p>
       </div>
-    </section>
-
-    <!-- ===== COMO FUNCIONA ===== -->
-    <section class="painel-ranking" id="painel-comofunciona" data-ranking="comofunciona">
-
-      <div class="cf-intro">
-        <div class="cf-intro-emoji">🏁</div>
-        <h2 class="cf-intro-titulo">Todo mundo pode vencer</h2>
-        <p class="cf-intro-texto">
-          Aqui não é só quem manda presente que compete — <strong>qualquer pessoa que interage
-          com a live já entra na corrida</strong>. Curtir, seguir e compartilhar já dão impulso
-          de verdade no seu carro, e digitar comandos certos no chat na hora certa (tipo se
-          proteger ou congelar quem tá te ultrapassando) pode decidir a corrida sozinho — de
-          graça, só com estratégia. Presente ajuda e destrava carros especiais, mas o 1º lugar
-          é de quem jogar mais esperto, não de quem gastar mais.
-        </p>
-      </div>
-
-      <div class="cf-bloco">
-        <h3 class="cf-bloco-titulo">🎮 Como entrar na corrida</h3>
-        <div class="cf-passos">
-          <div class="cf-passo">
-            <div class="cf-passo-emoji">💬</div>
-            <div class="cf-passo-texto"><strong>Comente qualquer coisa</strong> no vídeo da live e seu carro já aparece na pista, correndo.</div>
-          </div>
-          <div class="cf-passo">
-            <div class="cf-passo-emoji">❤️</div>
-            <div class="cf-passo-texto"><strong>Curta, siga e compartilhe</strong> — cada ação dá um impulso de verdade, sem custar nada.</div>
-          </div>
-          <div class="cf-passo">
-            <div class="cf-passo-emoji">🛡️</div>
-            <div class="cf-passo-texto">Digite <strong>"proteção"</strong> no chat pra ficar imune por alguns segundos, ou <strong>"congelar @nome"</strong> pra travar quem tá te ameaçando — os dois custam pontos (você ganha pontos a cada volta que seu carro completa na pista), nada de dinheiro.</div>
-          </div>
-          <div class="cf-passo">
-            <div class="cf-passo-emoji">🎁</div>
-            <div class="cf-passo-texto">Presentes dão um impulso mais forte (quanto maior o presente, mais forte e mais demorado) e, acumulando na semana, destravam <strong>carros VIP</strong> com habilidades exclusivas.</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="cf-bloco">
-        <h3 class="cf-bloco-titulo">⚡ Energia (turbo) — como ganhar e o que cada nível faz</h3>
-        <p class="cf-bloco-sub">Curtir, comentar e compartilhar já dão um empurrãozinho de graça no seu carro. Presentes dão Energia e os 5 níveis de turbo abaixo — quanto maior o presente, mais Energia, mais forte e mais longo o efeito. Depois de usada, essa Energia não some: ela vira <strong>pontos</strong> pra você no ranking de Pontos (🪙 aba PONTOS), então cada presente conta pra dois lugares ao mesmo tempo. Se por algum motivo o impulso não aparecer no seu carro na hora, é só digitar o nome do presente no chat ("turbo", "turbo rápido", "turbo max", "turbo mega" ou "foguete") que ele é aplicado na mesma hora.</p>
-        <div class="cf-passos">
-          <div class="cf-passo">
-            <div class="cf-passo-emoji">🟡</div>
-            <div class="cf-passo-texto"><strong>Turbo</strong> — presente de 1 de Energia. Acelera o carro por 3 segundos.</div>
-          </div>
-          <div class="cf-passo">
-            <div class="cf-passo-emoji">🟢</div>
-            <div class="cf-passo-texto"><strong>Turbo Rápido</strong> — presente de 5 de Energia. Acelera mais forte que o Turbo, por 3 segundos.</div>
-          </div>
-          <div class="cf-passo">
-            <div class="cf-passo-emoji">🔵</div>
-            <div class="cf-passo-texto"><strong>Turbo Max</strong> — presente de 30 de Energia. Acelera bastante e ainda ganha <strong>escudo</strong> (fica imune a ser congelado) por 5 segundos.</div>
-          </div>
-          <div class="cf-passo">
-            <div class="cf-passo-emoji">🟠</div>
-            <div class="cf-passo-texto"><strong>Turbo Mega</strong> — presente de 99 de Energia. Acelerão + escudo de 10 segundos, e ainda <strong>congela por 5s</strong> quem estava logo atrás dele na hora.</div>
-          </div>
-          <div class="cf-passo">
-            <div class="cf-passo-emoji">🔴</div>
-            <div class="cf-passo-texto"><strong>Foguete</strong> — presente de 299 de Energia, o mais forte de todos. Acelerão gigante + escudo de 20 segundos, e <strong>congela por 5s TODOS</strong> os outros carros da pista de uma vez.</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="cf-bloco">
-        <h3 class="cf-bloco-titulo">🪙 Pontos de corrida — proteção e congelar</h3>
-        <p class="cf-bloco-sub">Você ganha pontos toda vez que seu carro completa uma volta, de acordo com a posição: 1º = 30, 2º = 20, 3º = 15, do 4º em diante = 10. Com pelo menos 10 pontos acumulados, dá pra usar no chat:</p>
-        <div class="cf-passos">
-          <div class="cf-passo">
-            <div class="cf-passo-emoji">🛡️</div>
-            <div class="cf-passo-texto"><strong>"proteção"</strong> — custa 10 pontos pra 5 segundos de escudo. Quanto mais pontos você usar de uma vez, mais tempo de proteção: cada 10 pontos = +5 segundos.</div>
-          </div>
-          <div class="cf-passo">
-            <div class="cf-passo-emoji">❄️</div>
-            <div class="cf-passo-texto"><strong>"congelar carro N"</strong> — custa 10 pontos pra travar aquele carro por 2 segundos. Também escala: cada 10 pontos a mais nesse mesmo carro = +2 segundos de congelamento.</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="cf-bloco">
-        <h3 class="cf-bloco-titulo">🚗 Os 13 carros VIP</h3>
-        <p class="cf-bloco-sub">Toque em um carro pra ver a habilidade dele</p>
-        <div class="cf-carros-grid" id="cf-carros-grid"></div>
-      </div>
-
-      <div class="cf-bloco">
-        <h3 class="cf-bloco-titulo">🏆 Os rankings</h3>
-        <div class="cf-passos">
-          <div class="cf-passo"><div class="cf-passo-emoji">📅</div><div class="cf-passo-texto"><strong>Diário</strong> — zera toda meia-noite.</div></div>
-          <div class="cf-passo"><div class="cf-passo-emoji">🗓️</div><div class="cf-passo-texto"><strong>Semanal</strong> — zera toda segunda-feira.</div></div>
-          <div class="cf-passo"><div class="cf-passo-emoji">📆</div><div class="cf-passo-texto"><strong>Mensal</strong> — zera todo dia 1º do mês.</div></div>
-          <div class="cf-passo"><div class="cf-passo-emoji">👑</div><div class="cf-passo-texto"><strong>Ligas</strong> — permanente, nunca zera. É o que decide quais carros VIP você pode destravar.</div></div>
-        </div>
-      </div>
-
-      <div class="cf-bloco">
-        <h3 class="cf-bloco-titulo">🥇 Campeonato Diário</h3>
-        <p class="cf-bloco-sub">Quem estiver em <strong>1º lugar do ranking Diário</strong> no momento em que ele fecha (toda meia-noite) ganha um prêmio de <strong>⚡ Energia</strong> na conta. Essa Energia não expira — fica guardada até você decidir usar, em qualquer live futura, é só digitar o nome do turbo correspondente no chat ("turbo", "turbo rápido", "turbo max", "turbo mega" ou "foguete"), exatamente como se tivesse recebido aquele presente de verdade.</p>
-      </div>
-
     </section>
 
     <!-- modal de detalhe do carro (some por padrão, abre ao tocar num carro do grid acima) -->
@@ -312,7 +223,7 @@
               <li>🟠 <strong>"turbo mega"</strong> — gasta 99⚡</li>
               <li>🔴 <strong>"foguete"</strong> — gasta 299⚡</li>
             </ul>
-            Comandos✅:congelar Carro x,proteção,turbo,Turbo rápido,turbo max,foguete.`,
+            Funciona igualzinho a receber aquele presente de verdade — inclusive coloca seu carro na pista, se ele ainda não estiver correndo.`,
         },
         3: {
           emoji: '⚡',
@@ -331,15 +242,15 @@
         4: {
           emoji: '👑',
           titulo: 'Carros VIP',
-          texto: `São 13 carros especiais, cada um com uma habilidade única — trava quem tá atrás, escudo automático, congela todo mundo, copia impulso, e muito mais.<br><br>
-            Digite o nome do carro no chat pra correr com ele, se já tiver Energia suficiente acumulada (quanto mais forte o carro, mais Energia — e às vezes uma Liga mínima — ele exige). Digite <strong>"classic"</strong> pra voltar ao carro padrão quando quiser.<br><br>
-            Veja o preço e a habilidade de cada um na aba <strong>🚗 CARROS VIP</strong>, mais abaixo nesse site.`,
+          texto: `<p class="menu-ajuda-texto-intro">Digite o nome do carro no chat pra correr com ele, se já tiver Energia suficiente acumulada. Digite <strong>"classic"</strong> pra voltar ao padrão. Toque num carro abaixo pra ver a habilidade dele:</p>
+            <div class="cf-carros-grid" id="menu-carros-grid"></div>`,
         },
         5: {
           emoji: '🏆',
           titulo: 'Ligas e como subir rápido',
-          texto: `Ligas são <strong>permanentes</strong> (nunca zeram) e sobem com troféus, ganhos ao final de cada corrida: 1º = 10, 2º = 7, 3º = 5, do 4º ao 10º = 2, do 11º em diante = 1.<br><br>
-            <strong>Dica pra subir rápido:</strong> corra TODA corrida, mesmo sem vencer — ficar entre os 10 primeiros já rende, e isso soma rápido com constância. Ficar em 1º sempre que possível multiplica o ganho.`,
+          texto: `<p class="menu-ajuda-texto-intro">Ligas são <strong>permanentes</strong> (nunca zeram) e sobem com troféus, ganhos ao final de cada corrida: 1º = 10, 2º = 7, 3º = 5, do 4º ao 10º = 2, do 11º em diante = 1.</p>
+            <div class="menu-ligas-grid" id="menu-ligas-grid"></div>
+            <p class="menu-ajuda-texto-intro" style="margin-top:14px;"><strong>Dica pra subir rápido:</strong> corra TODA corrida, mesmo sem vencer — ficar entre os 10 primeiros já rende, e isso soma rápido com constância.</p>`,
         },
         6: {
           emoji: '🎯',
@@ -390,6 +301,11 @@
         lista.hidden = true;
         detalhe.hidden = false;
         detalhe.scrollTop = 0;
+        // 🚗🏆 opções 4 (Carros VIP) e 5 (Ligas) têm um grid de verdade, montado pelo
+        // ranking.js (que já tem os dados) — precisa chamar de novo TODA vez que a opção
+        // abre, porque o innerHTML de cima acabou de recriar o container vazio
+        if (numero == 4 && typeof window.montarGridCarrosVip === 'function') window.montarGridCarrosVip('menu-carros-grid');
+        if (numero == 5 && typeof window.montarGridLigas === 'function') window.montarGridLigas('menu-ligas-grid');
       }
 
       // abre sozinho assim que a página carrega
