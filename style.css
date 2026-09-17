@@ -27,16 +27,11 @@ html, body {
 /* ---------- topo ---------- */
 .topo {
   text-align: center;
-  padding: 28px 16px 14px;
+  padding: 20px 16px 10px;
 }
-.topo-emoji { font-size: 2.6em; line-height: 1; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
-.topo h1 {
-  margin: 4px 0 0; font-size: 2em; font-weight: 900; letter-spacing: 2px;
-  color: #ffd166; text-shadow: 0 2px 10px rgba(255,209,102,0.35), 0 2px 6px rgba(0,0,0,0.6);
-}
-.topo .subtitulo {
-  margin: 2px 0 0; font-size: 0.85em; font-weight: 700; letter-spacing: 3px;
-  color: #bcd6ff; opacity: 0.85;
+.topo-banner {
+  width: 100%; max-width: 420px; height: auto; display: block; margin: 0 auto;
+  filter: drop-shadow(0 4px 14px rgba(0,0,0,0.5));
 }
 
 /* ---------- abas (Diário / Semanal / Ligas) ---------- */
@@ -319,7 +314,7 @@ html, body {
    =================================================================== */
 @media (min-width: 560px) {
   .conteudo, .abas { max-width: 560px; }
-  .topo h1 { font-size: 2.3em; }
+  .topo-banner { max-width: 480px; }
   .card-jogador { padding: 12px 16px; }
 }
 
