@@ -1,450 +1,463 @@
-// ranking.js — CORRIDA-RANKING
-//
-// Conecta direto no Supabase (só leitura — chave pública, protegida pelas regras RLS que
-// não deixam ninguém escrever) e monta os 3 rankings. Não passa pelo PC/server.js em
-// nenhum momento — por isso continua funcionando com o PC desligado.
+/* ===================================================================
+   CORRIDA-RANKING/style.css
+   Mesma identidade visual das telas de ranking do jogo (fundo escuro,
+   cards, brilho no Top 3, dourado #ffd166) — só que pensado PRIMEIRO
+   pra celular vertical (mobile-first: os estilos "base" já são os do
+   celular; a versão maior de tela só AJUSTA alguns tamanhos depois).
+   =================================================================== */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-// ============================================================================
-// PREENCHA AQUI — são valores PÚBLICOS (a URL do projeto e a chave "anon/public"),
-// seguros de expor no site: quem protege os dados é a regra RLS lá no Supabase (só
-// leitura), não o segredo dessa chave. NUNCA cole aqui a chave "service_role" — essa
-// fica só no servidor, dentro do arquivo .env, que nunca vai pro site público.
-// Onde achar: Supabase → seu projeto → ⚙️ Project Settings → API.
-// ============================================================================
-const SUPABASE_URL = 'https://yciozcjbqsqyljapvfsl.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_Xo3Le8kauzM7VKBT2PVGRQ_KK2HIoc6';
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// mesma tabela de ligas do ligas.js do jogo (Bronze 50 até Leoncs 50.000) — se um dia
-// mudar os valores lá no jogo, troque aqui também pra manter os dois batendo
-const LIGAS = [
-  { nome: 'Bronze', trofeus: 50, icone: 'Bronze.png' },
-  { nome: 'Prata', trofeus: 500, icone: 'Prata.png' },
-  { nome: 'Ouro', trofeus: 1500, icone: 'Ouro.png' },
-  { nome: 'Diamante', trofeus: 4000, icone: 'Diamante.png' },
-  { nome: 'Mestre', trofeus: 9000, icone: 'Mestre.png' },
-  { nome: 'Campeão', trofeus: 17500, icone: 'Campeão.png' },
-  { nome: 'Lendas', trofeus: 30000, icone: 'Lendas.png' },
-  { nome: 'Leoncs', trofeus: 50000, icone: 'Leoncs.png' },
-];
-function getLigaPorTrofeus(trofeus) {
-  if (trofeus < LIGAS[0].trofeus) return null;
-  let atual = LIGAS[0];
-  for (const l of LIGAS) { if (trofeus >= l.trofeus) atual = l; else break; }
-  return atual;
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; min-height: 100%;
+  background: #0c0c12;
+  color: #fff;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  overscroll-behavior-y: contain;
 }
 
-// mesma função de nome que o jogo já usa — só a primeira palavra do nome, sem acento/
-// símbolo, pra busca e exibição ficarem consistentes com o que aparece dentro do jogo.
-// Se der um pedaço curto demais (tipo "E", "AR" — não identifica ninguém de verdade,
-// geralmente por causa de letras "decoradas" unicode que não contam como letra normal),
-// cai num plano B: pega tudo até o primeiro ESPAÇO de verdade, sem cortar em pontuação.
-function primeiraPalavraDoNome(usuario) {
-  const bruto = (usuario || '').trim();
-  const encontrado = bruto.match(/[\p{L}\p{N}]+/u);
-  let primeira = encontrado ? encontrado[0] : bruto;
-
-  if (primeira.length <= 3 && bruto.length > primeira.length) {
-    const ateOEspaco = bruto.split(/\s+/)[0];
-    const semSimbolosNasPontas = ateOEspaco.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
-    if (semSimbolosNasPontas.length > primeira.length) primeira = semSimbolosNasPontas;
-  }
-  return primeira ? primeira.charAt(0).toUpperCase() + primeira.slice(1) : primeira;
+/* fundo com uma leve textura de "pista" (listras diagonais bem discretas, como o
+   fundo verde do jogo, só que escurecido pra combinar com o resto do site) */
+.fundo-pista {
+  position: fixed; inset: 0; z-index: -1;
+  background:
+    repeating-linear-gradient(135deg, rgba(255,255,255,0.02) 0 40px, transparent 40px 80px),
+    radial-gradient(ellipse at top, #1b1b28 0%, #0c0c12 60%);
 }
 
-// pega os nomes de exibição de uma LISTA inteira de uma vez e DESAMBIGUA quem bate no
-// mesmo primeiro nome — ex: "Daniel Barros" e "Daniel Fernandes" os dois virariam só
-// "Daniel"; aqui, quando isso acontece, cada um ganha a inicial da segunda palavra do nome
-// de verdade: "Daniel B." e "Daniel F." — só quem realmente colide ganha esse sufixo
-function nomesParaExibirComDesambiguacao(listaDeUsuarios) {
-  const base = listaDeUsuarios.map(primeiraPalavraDoNome);
-  const contagem = {};
-  base.forEach((n) => { const chave = n.toLowerCase(); contagem[chave] = (contagem[chave] || 0) + 1; });
-
-  return listaDeUsuarios.map((usuarioReal, i) => {
-    const nomeBase = base[i];
-    if (contagem[nomeBase.toLowerCase()] <= 1) return nomeBase;
-    const palavras = (usuarioReal || '').trim().split(/\s+/).filter(Boolean);
-    if (palavras.length > 1) {
-      const segundaLetra = (palavras[1].match(/[\p{L}\p{N}]/u) || [])[0];
-      if (segundaLetra) return `${nomeBase} ${segundaLetra.toUpperCase()}.`;
-    }
-    return nomeBase;
-  });
+/* ---------- topo ---------- */
+.topo {
+  text-align: center;
+  padding: 20px 16px 10px;
 }
-function normalizarBusca(txt) {
-  return (txt || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-}
-function iniciaisDe(usuario) {
-  const p = primeiraPalavraDoNome(usuario);
-  return (p[0] || '?').toUpperCase();
+.topo-banner {
+  width: 100%; max-width: 420px; height: auto; display: block; margin: 0 auto;
+  filter: drop-shadow(0 4px 14px rgba(0,0,0,0.5));
 }
 
-// mesmo ícone de coroa (SVG) que o jogo usa no lugar da medalha do 1º/2º/3º lugar
-const SVG_COROA = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18l-1.4-8.2-4.6 3.4L12 6l-3 7.2-4.6-3.4L3 18z"/></svg>`;
-
-// guarda os dados já carregados de cada ranking, pra busca não precisar ir no banco de novo
-const cache = { diario: [], diaAnterior: [], semanal: [], mensal: [], ligas: [], moedas: [] };
-
-// ---------------------------------------------------------------------------
-// carregamento dos 3 rankings
-// ---------------------------------------------------------------------------
-// quantas linhas buscar de cada ranking — bem mais que o suficiente pra não cortar
-// ninguém, mas explícito (o Supabase, por padrão, corta em 1000 linhas SEM avisar se a
-// consulta não disser um limite — isso podia fazer gente "sumir" do ranking sem erro nenhum)
-const LIMITE_LINHAS = 5000;
-
-async function carregarRanking(chave) {
-  const container = document.getElementById(`lista-${chave}`);
-  try {
-    const nomeView = chave === 'diario' ? 'ranking_diario' : chave === 'diaAnterior' ? 'ranking_dia_anterior' : chave === 'semanal' ? 'ranking_semanal' : chave === 'mensal' ? 'ranking_mensal' : chave === 'moedas' ? 'ranking_moedas' : 'ranking_ligas';
-    // campo usado pra ordenar CADA ranking — ligas usa o troféu permanente da liga; diário,
-    // semanal e mensal usam "pontos" (que já é o troféu do período certo, calculado pela
-    // view); a aba "🪙 PONTOS" (chave interna "moedas", por compatibilidade com a coluna
-    // "moedas_semana" já existente no banco — nome antigo, mantido só aqui por baixo dos
-    // panos) é PERMANENTE, nunca reseta, igual troféu total.
-    const campoOrdenacao = chave === 'ligas' ? 'trofeus_total' : chave === 'moedas' ? 'moedas_semana' : 'pontos';
-    // pede a ordenação AQUI, na consulta — não basta a VIEW já ter "order by" internamente:
-    // sem pedir explicitamente na consulta, o Postgres não garante manter essa ordem
-    const { data, error } = await supabase
-      .from(nomeView)
-      .select('*')
-      .order(campoOrdenacao, { ascending: false })
-      .order('usuario', { ascending: true }) // desempate fixo (alfabético) entre quem tem a mesma pontuação — sem isso, o Postgres pode devolver os empatados em ordem diferente a cada consulta
-      .limit(LIMITE_LINHAS);
-    if (error) throw error;
-    cache[chave] = data || [];
-    renderizarLista(chave);
-    return true;
-  } catch (e) {
-    console.error(`Erro ao carregar ranking "${chave}":`, e.message);
-    container.innerHTML = `<p class="estado-info erro">⚠️ Não consegui carregar o ranking agora.<br>Tenta recarregar a página em instantes.</p>`;
-    return false;
-  }
+/* ---------- abas (Diário / Semanal / Ligas) ---------- */
+.abas {
+  display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 14px; max-width: 480px; margin: 0 auto;
+}
+.aba {
+  flex: 1 1 30%; min-width: 90px; padding: 12px 6px; border: none; border-radius: 12px;
+  background: rgba(255,255,255,0.06); color: #cfd6e6;
+  font-size: 0.92em; font-weight: 800; letter-spacing: 0.3px;
+  cursor: pointer; transition: transform 0.15s, background 0.2s, color 0.2s, box-shadow 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.aba:active { transform: scale(0.96); }
+.aba.ativa {
+  background: linear-gradient(145deg, #ffe082, #d4a017); color: #2c1e00;
+  box-shadow: 0 4px 16px rgba(255,209,102,0.35);
 }
 
-function renderizarLista(chave) {
-  const container = document.getElementById(`lista-${chave}`);
-  const linhas = cache[chave];
-  if (!linhas.length) {
-    container.innerHTML = '<p class="estado-info">Ainda não tem ninguém nesse ranking.</p>';
-    return;
-  }
-  const campoValor = chave === 'ligas' ? 'trofeus_total' : chave === 'moedas' ? 'moedas_semana' : 'pontos';
-  const labelValor = chave === 'moedas' ? 'PONTOS' : 'TROFÉUS';
-  const nomes = nomesParaExibirComDesambiguacao(linhas.map((j) => j.usuario));
-  container.innerHTML = linhas.map((j, i) => cardHtml(i + 1, j, campoValor, labelValor, nomes[i])).join('');
-  // depois de trocar o HTML, se já tinha uma busca ativa nesse ranking, reaplica o destaque
-  reaplicarDestaqueSeTiver(chave);
+/* ---------- conteúdo / painéis ---------- */
+.conteudo { max-width: 480px; margin: 0 auto; padding: 4px 14px 40px; }
+.painel-ranking { display: none; }
+.painel-ranking.ativa { display: block; animation: entrarPainel 0.25s ease; }
+@keyframes entrarPainel { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.info-periodo {
+  text-align: center; font-size: 0.82em; color: #9aa0ae; font-weight: 700;
+  margin: 6px 0 12px;
 }
 
-function cardHtml(posicao, j, campoValor, labelValor, nomeExibido) {
-  const liga = getLigaPorTrofeus(j.trofeus_total);
-  const classeMedalha = posicao === 1 ? 'ouro' : posicao === 2 ? 'prata' : posicao === 3 ? 'bronze' : '';
-  // coroa no lugar da medalha — o div fica sempre presente (mesmo vazio) pra manter o
-  // alinhamento das linhas igual, seja ela top 3 ou não, igual no jogo
-  const coroaHtml = `<div class="card-coroa ${classeMedalha}">${classeMedalha ? SVG_COROA : ''}</div>`;
-  const iniciais = iniciaisDe(j.usuario);
-  const valor = (Number(j[campoValor]) || 0).toLocaleString('pt-BR');
-  // emblema grande da liga do lado do avatar, igual no jogo — quem ainda não bateu Bronze
-  // (menos de 50 troféus) ganha um círculo preto escrito "sem liga" no lugar do escudo
-  const emblemaHtml = liga
-    ? `<img src="liga/${liga.icone}" alt="${liga.nome}" onerror="this.style.display='none'">`
-    : `<div class="card-sem-liga">sem liga</div>`;
-  const ligaNomeHtml = liga ? `<div class="card-liga">${liga.nome}</div>` : '';
-  const fotoHtml = j.foto
-    ? `<img src="${j.foto}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-       <span class="card-avatar-fallback" style="display:none;">${iniciais}</span>`
-    : `<span class="card-avatar-fallback" style="display:flex;">${iniciais}</span>`;
-  return `
-    <div class="card-jogador ${classeMedalha}" data-usuario="${(j.usuario || '').toLowerCase()}">
-      ${coroaHtml}
-      <div class="card-pos">${posicao}º</div>
-      <div class="card-avatar">${fotoHtml}</div>
-      <div class="card-emblema">${emblemaHtml}</div>
-      <div class="card-info">
-        <div class="card-nome">${nomeExibido}</div>
-        ${ligaNomeHtml}
-      </div>
-      <div class="card-valor">
-        <div class="card-valor-num">${valor}</div>
-        <div class="card-valor-label">${labelValor}</div>
-      </div>
-    </div>`;
+/* ---------- busca ---------- */
+.busca-wrap {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px; padding: 10px 12px; margin-bottom: 6px;
+}
+.busca-icone { font-size: 1.05em; opacity: 0.8; flex: 0 0 auto; }
+.busca-input {
+  flex: 1 1 auto; min-width: 0; background: transparent; border: none; outline: none;
+  color: #fff; font-size: 1em; font-family: inherit;
+}
+.busca-input::placeholder { color: #8890a0; }
+.busca-limpar {
+  flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; border: none;
+  background: rgba(255,255,255,0.1); color: #cfd6e6; font-size: 0.85em; cursor: pointer;
+  display: none; align-items: center; justify-content: center;
+}
+.busca-wrap.tem-texto .busca-limpar { display: flex; }
+.busca-resultado {
+  min-height: 1.3em; margin: 4px 2px 12px; font-size: 0.85em; font-weight: 700;
+}
+.busca-resultado.ok { color: #3ddc84; }
+.busca-resultado.erro { color: #ff6b6b; }
+.busca-resultado.aviso { color: #ffd166; }
+
+/* ---------- lista do ranking ---------- */
+.lista-ranking {
+  display: flex; flex-direction: column; gap: 10px;
+  max-height: 70vh; overflow-y: auto; overflow-x: hidden;
+  padding: 4px 4px 4px 2px; margin: 0 -4px;
+  scroll-behavior: smooth;
+}
+.lista-ranking::-webkit-scrollbar { width: 6px; }
+.lista-ranking::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 8px; }
+.lista-ranking::-webkit-scrollbar-thumb { background: rgba(255,209,102,0.45); border-radius: 8px; }
+
+.estado-info {
+  text-align: center; color: #9aa0ae; font-size: 0.95em; padding: 30px 10px;
+}
+.estado-info.erro { color: #ff8080; }
+
+/* card de cada jogador */
+.card-jogador {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,0.045); border-radius: 14px; padding: 10px 12px;
+  min-height: 60px;
+}
+/* coroa do 1º/2º/3º lugar, no lugar da antiga medalha emoji — igual ao jogo. O box fica
+   sempre com o mesmo tamanho (mesmo vazio pra quem não é top 3), pra manter alinhada a
+   posição de todas as linhas */
+.card-coroa {
+  width: 20px; height: 20px; flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
+}
+.card-coroa svg { width: 100%; height: 100%; }
+.card-coroa.ouro   { color: #ffd700; filter: drop-shadow(0 0 6px rgba(255,215,0,0.9)) drop-shadow(0 0 2px #fff); }
+.card-coroa.prata  { color: #d9dee5; filter: drop-shadow(0 0 3px rgba(210,220,235,0.6)); }
+.card-coroa.bronze { color: #cd7f32; filter: drop-shadow(0 0 3px rgba(205,127,50,0.6)); }
+
+.card-pos {
+  width: 34px; height: 34px; border-radius: 50%; flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 0.95em; color: #1a1a1a; background: #616170;
+}
+.card-avatar {
+  width: 42px; height: 42px; border-radius: 50%; flex: 0 0 auto;
+  background-color: #2a2a3a; overflow: hidden; position: relative;
+  border: 2px solid rgba(255,255,255,0.15);
+}
+.card-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.card-avatar-fallback {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-weight: 800; color: #fff; font-size: 0.95em;
+}
+/* emblema grande da liga, do lado do avatar — igual ao jogo. Quem ainda não bateu a liga
+   Bronze (menos de 50 troféus) ganha um círculo preto escrito "sem liga" no lugar do escudo */
+.card-emblema {
+  width: 46px; height: 46px; flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
+}
+.card-emblema img { width: 100%; height: 100%; object-fit: contain; }
+.card-sem-liga {
+  width: 100%; height: 100%; border-radius: 50%;
+  background: #000; color: #fff; font-size: 0.62em; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  line-height: 1.15; padding: 2px;
 }
 
-// ---------------------------------------------------------------------------
-// contagem de tempo até o próximo reset (calculada aqui no navegador, com a hora
-// local da própria pessoa — não depende do servidor nem do PC estar ligado)
-// ---------------------------------------------------------------------------
-function atualizarContagens() {
-  const agora = new Date();
-  const NOMES_MESES_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+.card-info { flex: 1 1 auto; min-width: 0; }
+.card-nome {
+  font-weight: 700; font-size: 0.98em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.card-liga { font-size: 0.78em; color: #9aa0ae; margin-top: 2px; }
+.card-valor { flex: 0 0 auto; text-align: right; }
+.card-valor-num { font-weight: 900; font-size: 1.15em; color: #ffd166; line-height: 1; }
+.card-valor-label { font-size: 0.68em; color: #9aa0ae; font-weight: 700; letter-spacing: 0.5px; }
 
-  const meiaNoite = new Date(agora);
-  meiaNoite.setDate(agora.getDate() + 1);
-  meiaNoite.setHours(0, 0, 0, 0);
-  const msAteMeiaNoite = meiaNoite - agora;
-  const hDia = Math.floor(msAteMeiaNoite / 3600000);
-  const mDia = Math.floor((msAteMeiaNoite % 3600000) / 60000);
-  document.getElementById('info-periodo-diario').textContent = `Dia ${agora.getDate()} · ⏳ Restam ${hDia}h ${mDia}min`;
-
-  // dia anterior é uma FOTO congelada (tirada às 23:59 de ontem) — não tem contagem
-  // regressiva nenhuma, mostra só um aviso fixo explicando o que é
-  const elDiaAnterior = document.getElementById('info-periodo-diaAnterior');
-  if (elDiaAnterior) elDiaAnterior.textContent = '📋 Foto do ranking de ontem, às 23:59 — não muda mais';
-
-  const diaSemana = agora.getDay(); // 0=domingo
-  const NOMES_DIAS_SEMANA_PT = ['Domingo', 'Segunda-Feira', 'Terça-Feira', 'Quarta-Feira', 'Quinta-Feira', 'Sexta-Feira', 'Sábado'];
-  const diasAteSegunda = diaSemana === 1 ? 7 : ((8 - diaSemana) % 7) || 7;
-  const proximaSegunda = new Date(agora);
-  proximaSegunda.setDate(agora.getDate() + diasAteSegunda);
-  proximaSegunda.setHours(0, 0, 0, 0);
-  const msAteSegunda = proximaSegunda - agora;
-  const dSemana = Math.floor(msAteSegunda / 86400000);
-  const hSemana = Math.floor((msAteSegunda % 86400000) / 3600000);
-  document.getElementById('info-periodo-semanal').textContent = `${NOMES_DIAS_SEMANA_PT[diaSemana]} · ⏳ Restam ${dSemana}d ${hSemana}h`;
-  // moedas é PERMANENTE agora (nunca reseta) — sem contagem regressiva nenhuma, mesmo texto
-  // fixo que o Ranking de Melhores Ligas já usa (que também é permanente)
-  const elMoedas = document.getElementById('info-periodo-moedas');
-  if (elMoedas) elMoedas.textContent = '🏆 Ranking permanente — nunca reseta';
-
-  // mensal reseta no dia 1º do próximo mês, meia-noite — relógio PRÓPRIO, igual o jogo
-  const proximoMes = new Date(agora.getFullYear(), agora.getMonth() + 1, 1, 0, 0, 0, 0);
-  const msAteProximoMes = proximoMes - agora;
-  const dMes = Math.floor(msAteProximoMes / 86400000);
-  const hMes = Math.floor((msAteProximoMes % 86400000) / 3600000);
-  const elMensal = document.getElementById('info-periodo-mensal');
-  if (elMensal) elMensal.textContent = `${NOMES_MESES_PT[agora.getMonth()]} · ⏳ Restam ${dMes}d ${hMes}h`;
+/* top 3: posição colorida + brilho contínuo, igual ao jogo */
+.card-jogador.ouro .card-pos   { background: linear-gradient(145deg, #ffe082, #d4a017); color: #3a2900; box-shadow: 0 0 10px rgba(255,215,0,0.55); }
+.card-jogador.prata .card-pos  { background: linear-gradient(145deg, #f1f3f6, #b9c0c9); color: #26292e; box-shadow: 0 0 8px rgba(220,225,235,0.5); }
+.card-jogador.bronze .card-pos { background: linear-gradient(145deg, #e3a06a, #a5622d); color: #2c1607; box-shadow: 0 0 8px rgba(200,120,50,0.5); }
+.card-jogador.ouro, .card-jogador.prata, .card-jogador.bronze { background: rgba(255,255,255,0.08); }
+.card-jogador.ouro   { animation: respirarOuro 2.4s ease-in-out infinite; }
+.card-jogador.prata  { animation: respirarPrata 2.4s ease-in-out infinite; }
+.card-jogador.bronze { animation: respirarBronze 2.4s ease-in-out infinite; }
+/* isola a repintura desses 3 numa camada própria — alguns navegadores (principalmente no
+   celular) "empurram" o layout dos itens de baixo quando um box-shadow animado fica dentro
+   de uma lista com rolagem, dando a impressão de que a lista "quebra" logo depois do Top 3 */
+.card-jogador.ouro, .card-jogador.prata, .card-jogador.bronze {
+  will-change: box-shadow;
+  transform: translateZ(0);
+}
+@keyframes respirarOuro {
+  0%, 100% { box-shadow: 0 0 6px 1px rgba(255,215,0,0.5), 0 0 0 2px rgba(255,215,0,0.45) inset; }
+  50% { box-shadow: 0 0 16px 4px rgba(255,215,0,0.95), 0 0 0 2px rgba(255,215,0,0.9) inset; }
+}
+@keyframes respirarPrata {
+  0%, 100% { box-shadow: 0 0 6px 1px rgba(217,222,229,0.45), 0 0 0 2px rgba(217,222,229,0.4) inset; }
+  50% { box-shadow: 0 0 16px 4px rgba(217,222,229,0.9), 0 0 0 2px rgba(217,222,229,0.85) inset; }
+}
+@keyframes respirarBronze {
+  0%, 100% { box-shadow: 0 0 6px 1px rgba(205,127,50,0.45), 0 0 0 2px rgba(205,127,50,0.4) inset; }
+  50% { box-shadow: 0 0 16px 4px rgba(205,127,50,0.9), 0 0 0 2px rgba(205,127,50,0.85) inset; }
 }
 
-// ---------------------------------------------------------------------------
-// busca + localização automática — cada ranking tem a SUA PRÓPRIA busca, e ela só
-// destaca/rola até o jogador, nunca muda a ordem real da lista
-// ---------------------------------------------------------------------------
-const buscaAtiva = {}; // chave -> termo digitado (guardado pra reaplicar o destaque quando o ranking recarrega)
-
-function configurarBusca(chave) {
-  const input = document.getElementById(`busca-${chave}`);
-  const wrap = input.closest('.busca-wrap');
-  const botaoLimpar = document.getElementById(`busca-${chave}-limpar`);
-  const resultado = document.getElementById(`busca-${chave}-resultado`);
-
-  function limparDestaques() {
-    document.querySelectorAll(`#lista-${chave} .card-jogador`).forEach((el) => el.classList.remove('destaque-busca'));
-  }
-
-  function executarBusca() {
-    const termo = input.value.trim();
-    wrap.classList.toggle('tem-texto', termo.length > 0);
-    limparDestaques();
-    if (!termo) {
-      resultado.textContent = '';
-      resultado.className = 'busca-resultado';
-      buscaAtiva[chave] = '';
-      return;
-    }
-    buscaAtiva[chave] = termo;
-    const alvo = normalizarBusca(termo);
-    const lista = cache[chave];
-    const idx = lista.findIndex((j) => normalizarBusca(j.usuario).includes(alvo));
-    if (idx === -1) {
-      resultado.textContent = `❌ Ninguém encontrado com "${termo}" nesse ranking.`;
-      resultado.className = 'busca-resultado erro';
-      return;
-    }
-    resultado.textContent = `✅ @${lista[idx].usuario} está em ${idx + 1}º lugar!`;
-    resultado.className = 'busca-resultado ok';
-    const cards = document.querySelectorAll(`#lista-${chave} .card-jogador`);
-    const alvoEl = cards[idx];
-    if (alvoEl) {
-      alvoEl.classList.add('destaque-busca');
-      alvoEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }
-
-  let timeoutBusca;
-  input.addEventListener('input', () => {
-    clearTimeout(timeoutBusca);
-    timeoutBusca = setTimeout(executarBusca, 250); // pequena pausa pra não buscar a cada letrinha
-  });
-  botaoLimpar.addEventListener('click', () => { input.value = ''; executarBusca(); input.focus(); });
+/* destaque de quando a busca encontra o jogador — pulso amarelo temporário,
+   some sozinho depois de alguns segundos (igual o destaque do ranking no jogo) */
+.card-jogador.destaque-busca {
+  animation: pulsoBuscaRanking 1.1s ease-in-out infinite;
+}
+@keyframes pulsoBuscaRanking {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,209,102,0.9), 0 0 14px 2px rgba(255,209,102,0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(255,209,102,0), 0 0 22px 6px rgba(255,209,102,0.85); }
 }
 
-// se o ranking recarregar (ex: trocou de aba e voltou) e já tinha uma busca ativa, reaplica
-// o destaque sem precisar a pessoa digitar de novo
-function reaplicarDestaqueSeTiver(chave) {
-  const termo = buscaAtiva[chave];
-  if (!termo) return;
-  const alvo = normalizarBusca(termo);
-  const idx = cache[chave].findIndex((j) => normalizarBusca(j.usuario).includes(alvo));
-  if (idx === -1) return;
-  const cards = document.querySelectorAll(`#lista-${chave} .card-jogador`);
-  if (cards[idx]) cards[idx].classList.add('destaque-busca');
+/* ===================================================================
+   COMO FUNCIONA
+   =================================================================== */
+
+/* cartão de intro, com brilho dourado passando por cima igual o banner de
+   carros VIP do jogo — é a primeira coisa que a pessoa vê nessa aba */
+.cf-intro {
+  position: relative; overflow: hidden;
+  background: linear-gradient(160deg, rgba(255,209,102,0.14), rgba(255,209,102,0.03));
+  border: 1px solid rgba(255,209,102,0.35); border-radius: 18px;
+  padding: 22px 18px; margin: 10px 0 18px; text-align: center;
+}
+.cf-intro::after {
+  content: ''; position: absolute; top: 0; bottom: 0; width: 45%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,0.18), transparent);
+  animation: cfBrilhoIntro 3.2s ease-in-out infinite;
+}
+@keyframes cfBrilhoIntro { 0% { left: -55%; } 100% { left: 130%; } }
+.cf-intro-emoji { font-size: 2.4em; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
+.cf-intro-titulo {
+  margin: 6px 0 10px; font-size: 1.3em; font-weight: 900; color: #ffd166;
+  text-shadow: 0 2px 10px rgba(255,209,102,0.3);
+}
+.cf-intro-texto { margin: 0; font-size: 0.92em; line-height: 1.55; color: #dfe3ec; }
+.cf-intro-texto strong { color: #ffd166; }
+
+.cf-bloco { margin: 22px 0; }
+.cf-bloco-titulo { font-size: 1.05em; font-weight: 800; color: #fff; margin: 0 0 4px; }
+.cf-bloco-sub { font-size: 0.82em; color: #9aa0ae; margin: 0 0 12px; }
+
+.cf-passos { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.cf-passo {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: rgba(255,255,255,0.045); border-radius: 14px; padding: 12px 14px;
+}
+.cf-passo-emoji { font-size: 1.4em; flex: 0 0 auto; line-height: 1.2; }
+.cf-passo-texto { font-size: 0.88em; line-height: 1.5; color: #dfe3ec; }
+.cf-passo-texto strong { color: #ffd166; }
+
+/* grid de carros — GRANDE e tocável no celular (2 colunas), cada um com foto de verdade */
+.cf-carros-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+}
+.cf-carro-card {
+  position: relative; display: flex; flex-direction: column; align-items: center; text-align: center;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px; padding: 14px 10px 12px; cursor: pointer;
+  transition: transform 0.15s, border-color 0.2s, background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.cf-carro-card:active { transform: scale(0.96); }
+.cf-carro-card.destaque {
+  border-color: #ffd700; background: rgba(255,215,0,0.07);
+  box-shadow: 0 0 16px 2px rgba(255,215,0,0.3);
+}
+.cf-carro-selo {
+  position: absolute; top: 8px; left: 8px; width: 28px; height: 28px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.7));
+}
+.cf-carro-imagem { width: 100%; height: 5.6em; object-fit: contain; margin-bottom: 6px; }
+.cf-carro-nome { font-weight: 800; font-size: 0.95em; }
+.cf-carro-nome .coroa { margin-left: 2px; }
+.cf-carro-resumo { font-size: 0.72em; color: #9aa0ae; margin-top: 3px; line-height: 1.35; }
+.cf-carro-toque {
+  margin-top: 8px; font-size: 0.68em; font-weight: 800; color: #ffd166;
+  letter-spacing: 0.4px; opacity: 0.85;
 }
 
-// ---------------------------------------------------------------------------
-// troca de abas (Diário / Semanal / Ligas) — a pesquisa de cada uma é independente
-// ---------------------------------------------------------------------------
-function configurarAbas() {
-  document.querySelectorAll('.aba').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.aba').forEach((b) => { b.classList.remove('ativa'); b.setAttribute('aria-selected', 'false'); });
-      btn.classList.add('ativa');
-      btn.setAttribute('aria-selected', 'true');
-      const chave = btn.dataset.aba;
-      document.querySelectorAll('.painel-ranking').forEach((p) => p.classList.remove('ativa'));
-      document.getElementById(`painel-${chave}`).classList.add('ativa');
-    });
-  });
+/* modal de detalhe — some por padrão, some centralizado por cima de tudo quando aberto */
+.cf-modal-fundo {
+  display: none; position: fixed; inset: 0; z-index: 65;
+  background: rgba(5,5,10,0.75); backdrop-filter: blur(3px);
+  align-items: flex-end; justify-content: center;
+}
+.cf-modal-fundo.aberto { display: flex; animation: cfFundoEntrar 0.2s ease; }
+@keyframes cfFundoEntrar { from { opacity: 0; } to { opacity: 1; } }
+.cf-modal-card {
+  position: relative; width: 100%; max-width: 480px;
+  background: linear-gradient(165deg, #1c1c28, #0f0f16);
+  border: 1px solid rgba(255,209,102,0.3); border-radius: 22px 22px 0 0;
+  padding: 26px 22px 32px; text-align: center;
+  animation: cfCardSubir 0.25s ease;
+  max-height: 85vh; overflow-y: auto;
+}
+@keyframes cfCardSubir { from { transform: translateY(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+.cf-modal-fechar {
+  position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border-radius: 50%;
+  border: none; background: rgba(255,255,255,0.1); color: #fff; font-size: 1em; cursor: pointer;
+}
+.cf-modal-imagem { width: 60%; max-width: 220px; height: auto; margin: 6px auto 10px; display: block; filter: drop-shadow(0 8px 18px rgba(0,0,0,0.5)); }
+.cf-modal-nome { font-size: 1.35em; font-weight: 900; color: #ffd166; text-shadow: 0 2px 8px rgba(255,209,102,0.3); }
+.cf-modal-requisito {
+  display: inline-block; margin-top: 6px; padding: 4px 12px; border-radius: 999px;
+  background: rgba(255,255,255,0.08); font-size: 0.78em; font-weight: 700; color: #cfd6e6;
+}
+.cf-modal-habilidade {
+  margin-top: 16px; font-size: 0.95em; line-height: 1.6; color: #e6e9f0;
+  text-align: left; background: rgba(255,255,255,0.04); border-radius: 14px; padding: 14px 16px;
 }
 
-// ===================================================================
-// MENU DE AJUDA — dados dos 13 carros VIP e das 8 Ligas (mesmo texto/regra
-// do jogo, CARROS_VIP_PADRAO/LIGAS no server.js), usados pelos grids do
-// Menu de Ajuda em index.html (montarGridCarrosVip/montarGridLigas, mais
-// abaixo). Isso aqui é conteúdo ESTÁTICO (não vem do Supabase) — só uma
-// explicação bonita pra quem nunca jogou entender rapidinho.
-// ===================================================================
-const CARROS_VIP_INFO = [
-  { nome: 'Street', preco: 1000, imagem: 'Street.png',
-    resumo: 'Turbo grátis extra',
-    habilidade: '🟢 <strong>Nitro Extra</strong> — sempre que manda um presente de 99 de Energia ou mais, ganha alguns segundos de turbo DE GRAÇA, por cima do impulso normal do presente.' },
-  { nome: 'Turbo', preco: 2500, imagem: 'Turbo.png',
-    resumo: 'Dobra a duração do impulso',
-    habilidade: '🟡 <strong>Turbo Prolongado</strong> — o impulso que acabou de ganhar com o presente dura o DOBRO do tempo normal.' },
-  { nome: 'Apex', preco: 5000, imagem: 'Apex.png',
-    resumo: 'Trava quem tá logo atrás',
-    habilidade: '🟢 <strong>Trava a Perseguição</strong> — trava por alguns segundos os 2 carros logo atrás dele na classificação, protegendo a posição atual.' },
-  { nome: 'Phantom', preco: 10000, imagem: 'Phantom.png',
-    resumo: 'Escudo automático',
-    habilidade: '⚪ <strong>Escudo Fantasma</strong> — ganha um escudo de 20 segundos na hora, sem precisar digitar nada no chat.' },
-  { nome: 'Vortex', preco: 20000, imagem: 'Vortex.png',
-    resumo: 'Desacelera quem tá perto',
-    habilidade: '🟣 <strong>Redemoinho</strong> — desacelera pra quase parado todo mundo que estiver fisicamente perto dele na pista.' },
-  { nome: 'Hard Core', preco: 40000, imagem: 'Hard Core.png',
-    resumo: 'Congela TODOS os outros',
-    habilidade: '🔴 <strong>Muro de Gelo</strong> — congela todos os outros carros da pista de uma vez só. O poder mais bruto dos 6 primeiros.' },
-  { nome: 'Raptor', preco: 60000, ligaMinima: 'Prata', imagem: 'Raptor.png',
-    resumo: 'Reflete qualquer poder',
-    habilidade: '🦖 <strong>Reflexo</strong> — por um tempo, qualquer poder usado CONTRA ele (congelar, desacelerar) volta pra quem usou.' },
-  { nome: 'Raven', preco: 80000, ligaMinima: 'Ouro', imagem: 'Raven.png',
-    resumo: 'Escudo + reflete congelamento',
-    habilidade: '🦅 <strong>Contra-Ataque</strong> — ganha escudo E, além disso, qualquer tentativa de CONGELAR ele volta pra quem tentou (que fica congelado no lugar dele).' },
-  { nome: 'Fury', preco: 110000, ligaMinima: 'Diamante', imagem: 'Fury.png',
-    resumo: 'Copia o último impulso da pista',
-    habilidade: '🔥 <strong>Cópia</strong> — copia o último impulso que aconteceu em QUALQUER carro da pista (de qualquer pessoa) e aplica esse mesmo impulso nele.' },
-  { nome: 'Venom', preco: 150000, ligaMinima: 'Mestre', imagem: 'Venom.png',
-    resumo: 'Joga os 2 da frente pra trás',
-    habilidade: '🐍 <strong>Emboscada</strong> — joga os 2 carros logo à frente dele de volta pro começo da volta 1, não importa em que volta eles estivessem, e passa na frente dos dois.' },
-  { nome: 'Shadow', preco: 200000, ligaMinima: 'Campeão', imagem: 'Shadow.png',
-    resumo: 'Paralisa até ultrapassar',
-    habilidade: '🌑 <strong>Eclipse</strong> — paralisa TODOS os outros carros no lugar. Cada um só se solta quando o Shadow realmente ultrapassa ele.' },
-  { nome: 'Storm', preco: 260000, ligaMinima: 'Lendas', imagem: 'Storm.png',
-    resumo: '+2 voltas na hora',
-    habilidade: '⚡ <strong>Tempestade</strong> — avança 2 voltas inteiras na hora. Exige presente de 299 de Energia ou mais (o dobro do normal).' },
-  { nome: 'Legend', preco: 350000, ligaMinima: 'Leoncs', imagem: 'Legend.png', destaque: true,
-    resumo: 'Troca de lugar com o líder',
-    habilidade: '🦁 <strong>Lenda</strong> — troca de posição direto com quem está em 1º lugar agora. O carro mais raro e mais forte do jogo.' },
-];
-
-function cfCarroCardHtml(carro, indice) {
-  const coroa = carro.destaque ? ' <span class="coroa">👑</span>' : '';
-  const selo = carro.ligaMinima
-    ? `<img class="cf-carro-selo" src="liga/${carro.ligaMinima}.png" alt="${carro.ligaMinima}" onerror="this.style.display='none'">`
-    : '';
-  return `
-    <button type="button" class="cf-carro-card ${carro.destaque ? 'destaque' : ''}" data-indice="${indice}">
-      ${selo}
-      <img class="cf-carro-imagem" src="${carro.imagem}" alt="${carro.nome}" onerror="this.style.opacity='0.15'">
-      <div class="cf-carro-nome">${carro.nome}${coroa}</div>
-      <div class="cf-carro-resumo">${carro.resumo}</div>
-      <div class="cf-carro-toque">TOQUE PRA VER</div>
-    </button>`;
+@media (min-width: 560px) {
+  .cf-carros-grid { grid-template-columns: repeat(3, 1fr); }
+  .cf-modal-fundo { align-items: center; }
+  .cf-modal-card { border-radius: 22px; max-width: 420px; }
 }
 
-function abrirModalCarro(carro) {
-  document.getElementById('cf-modal-imagem').src = carro.imagem;
-  document.getElementById('cf-modal-imagem').alt = carro.nome;
-  document.getElementById('cf-modal-nome').innerHTML = carro.nome + (carro.destaque ? ' 👑' : '');
-  const precoFmt = carro.preco.toLocaleString('pt-BR');
-  document.getElementById('cf-modal-requisito').textContent = carro.ligaMinima
-    ? `🏅 Liga ${carro.ligaMinima}+ e ⚡ ${precoFmt} Energia`
-    : `⚡ ${precoFmt} Energia`;
-  document.getElementById('cf-modal-habilidade').innerHTML = carro.habilidade;
-  document.getElementById('cf-modal-fundo').classList.add('aberto');
-}
-function fecharModalCarro() {
-  document.getElementById('cf-modal-fundo').classList.remove('aberto');
+/* ---------- rodapé ---------- */
+.rodape {
+  text-align: center; padding: 10px 14px 26px; font-size: 0.78em; color: #6b7180;
 }
 
-// liga o botão de fechar + clicar fora do modal de detalhe do carro — chamado UMA VEZ, na
-// largada (o modal em si fica fora do Menu de Ajuda, reaproveitado por ele)
-function prepararModalCarro() {
-  document.getElementById('cf-modal-fechar').addEventListener('click', fecharModalCarro);
-  document.getElementById('cf-modal-fundo').addEventListener('click', (e) => {
-    if (e.target.id === 'cf-modal-fundo') fecharModalCarro(); // clicou fora do card, fecha
-  });
+/* ===================================================================
+   Telas maiores (tablet/desktop) — ajustes só de espaçamento/largura,
+   o layout continua o mesmo (mobile-first: isso aqui só REFINA)
+   =================================================================== */
+@media (min-width: 560px) {
+  .conteudo, .abas { max-width: 560px; }
+  .topo-banner { max-width: 480px; }
+  .card-jogador { padding: 12px 16px; }
 }
 
-// monta o grid de carros VIP dentro do container indicado — exposta em "window" pra o
-// Menu de Ajuda (script separado, em index.html) poder chamar toda vez que a pessoa abrir
-// a opção "Carros VIP" (não dá pra montar só uma vez: o innerHTML daquela opção é
-// reconstruído do zero cada vez que ela é aberta, pra poder trocar de opção livremente)
-window.montarGridCarrosVip = function montarGridCarrosVip(containerId) {
-  const grid = document.getElementById(containerId);
-  if (!grid) return;
-  grid.innerHTML = CARROS_VIP_INFO.map(cfCarroCardHtml).join('');
-  grid.querySelectorAll('.cf-carro-card').forEach((el) => {
-    el.addEventListener('click', () => abrirModalCarro(CARROS_VIP_INFO[Number(el.dataset.indice)]));
-  });
-};
+/* ===================================================================
+   MENU DE AJUDA (interativo) — mesma linguagem visual do resto do site
+   (fundo escuro, dourado #ffd166, cards com leve transparência)
+   =================================================================== */
 
-// monta o grid de Ligas (logo + quantidade de troféus necessária de cada uma) — mesma
-// ideia do grid de carros, exposta em "window" pelo mesmo motivo
-window.montarGridLigas = function montarGridLigas(containerId) {
-  const grid = document.getElementById(containerId);
-  if (!grid) return;
-  grid.innerHTML = LIGAS.map((liga) => `
-    <div class="menu-liga-card">
-      <img class="menu-liga-imagem" src="liga/${liga.icone}" alt="${liga.nome}" onerror="this.style.opacity='0.15'">
-      <div class="menu-liga-nome">${liga.nome}</div>
-      <div class="menu-liga-trofeus">🏆 ${liga.trofeus.toLocaleString('pt-BR')} troféus</div>
-    </div>`).join('');
-};
-
-// ---------------------------------------------------------------------------
-// início
-// ---------------------------------------------------------------------------
-async function iniciar() {
-  configurarAbas();
-  ['diario', 'diaAnterior', 'semanal', 'mensal', 'ligas', 'moedas'].forEach(configurarBusca);
-  atualizarContagens();
-  setInterval(atualizarContagens, 30000); // atualiza a contagem regressiva a cada 30s
-  prepararModalCarro(); // liga o botão de fechar do modal de detalhe do carro VIP — os grids em si são montados sob demanda pelo Menu de Ajuda (ver index.html), não aqui
-
-  const statusEl = document.getElementById('status-conexao');
-  const resultados = await Promise.all([
-    carregarRanking('diario'),
-    carregarRanking('diaAnterior'),
-    carregarRanking('semanal'),
-    carregarRanking('mensal'),
-    carregarRanking('ligas'),
-    carregarRanking('moedas'),
-  ]);
-  statusEl.textContent = resultados.every(Boolean)
-    ? '🟢 Dados atualizados'
-    : '🔴 Alguns rankings não carregaram — tenta recarregar a página';
-
-  // atualiza os rankings sozinho de tempos em tempos, sem precisar recarregar a página
-  // (ex: alguém deixa a aba do celular aberta olhando durante a live)
-  setInterval(async () => {
-    const abaAtiva = document.querySelector('.painel-ranking.ativa')?.dataset.ranking;
-    if (abaAtiva) await carregarRanking(abaAtiva);
-  }, 30000);
+/* botão flutuante pra reabrir o menu, canto inferior direito — só aparece depois que o
+   menu for fechado (o menu abre sozinho ao entrar no site). Pulsa sozinho, sem parar, pra
+   chamar atenção sem ser irritante */
+.menu-ajuda-fab {
+  position: fixed; right: 18px; bottom: 18px; z-index: 60;
+  width: 56px; height: 56px; border-radius: 50%; border: none; cursor: pointer;
+  background: linear-gradient(145deg, #ffe082, #d4a017); color: #2c1e00;
+  display: flex; align-items: center; justify-content: center; font-size: 1.5em;
+  box-shadow: 0 4px 16px rgba(255,209,102,0.45);
+  animation: menuAjudaFabPulso 2.2s ease-in-out infinite;
+  -webkit-tap-highlight-color: transparent;
+}
+.menu-ajuda-fab:active { transform: scale(0.92); }
+.menu-ajuda-fab[hidden] { display: none; }
+@keyframes menuAjudaFabPulso {
+  0%, 100% { box-shadow: 0 4px 16px rgba(255,209,102,0.45), 0 0 0 0 rgba(255,209,102,0.55); }
+  50% { box-shadow: 0 4px 16px rgba(255,209,102,0.45), 0 0 0 10px rgba(255,209,102,0); }
 }
 
-iniciar();
+/* fundo escurecido por trás do modal, igual o modal de detalhe do carro VIP já existente */
+.menu-ajuda-fundo {
+  display: none; position: fixed; inset: 0; z-index: 61;
+  background: rgba(5,5,10,0.78); backdrop-filter: blur(3px);
+  align-items: flex-end; justify-content: center;
+}
+.menu-ajuda-fundo.aberto { display: flex; animation: cfFundoEntrar 0.2s ease; }
+
+.menu-ajuda-card {
+  position: relative; width: 100%; max-width: 480px;
+  background: linear-gradient(165deg, #1c1c28, #0f0f16);
+  border: 1px solid rgba(255,209,102,0.3); border-radius: 22px 22px 0 0;
+  padding: 24px 18px 30px; text-align: center;
+  animation: cfCardSubir 0.25s ease;
+  max-height: 85vh; overflow-y: auto;
+}
+.menu-ajuda-fechar {
+  position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border-radius: 50%;
+  border: none; background: rgba(255,255,255,0.1); color: #fff; font-size: 1em; cursor: pointer;
+  z-index: 2;
+}
+
+/* modal do RANKING (Diário/Dia Anterior/Semanal/Mensal/Ligas/Pontos) — mesmo visual do
+   Menu de Ajuda (fundo escurecido + card subindo de baixo), só que mostrando o conteúdo
+   que já existia em <main class="conteudo"> (os 6 painéis, a busca, etc — nada mudou ali
+   dentro, só passou a aparecer dentro de uma janela em vez de solto na página) */
+.rank-modal-fundo {
+  display: none; position: fixed; inset: 0; z-index: 61;
+  background: rgba(5,5,10,0.78); backdrop-filter: blur(3px);
+  align-items: flex-end; justify-content: center;
+}
+.rank-modal-fundo.aberto { display: flex; animation: cfFundoEntrar 0.2s ease; }
+
+.rank-modal-card {
+  position: relative; width: 100%; max-width: 480px;
+  background: linear-gradient(165deg, #1c1c28, #0f0f16);
+  border: 1px solid rgba(255,209,102,0.3); border-radius: 22px 22px 0 0;
+  padding: 44px 0 6px; text-align: left;
+  animation: cfCardSubir 0.25s ease;
+  max-height: 85vh; overflow-y: auto;
+}
+.rank-modal-card .conteudo { padding: 6px 16px 10px; max-width: none; margin: 0; }
+.rank-modal-fechar {
+  position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border-radius: 50%;
+  border: none; background: rgba(255,255,255,0.12); color: #fff; font-size: 1em; cursor: pointer;
+  z-index: 2;
+}
+
+.menu-ajuda-topo { margin-bottom: 14px; }
+.menu-ajuda-emoji { font-size: 2.2em; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
+.menu-ajuda-titulo {
+  margin: 6px 0 4px; font-size: 1.25em; font-weight: 900; color: #ffd166;
+  text-shadow: 0 2px 10px rgba(255,209,102,0.3);
+}
+.menu-ajuda-sub { margin: 0; font-size: 0.85em; color: #9aa0ae; }
+
+/* cada opção do menu é um botão-card inteiro clicável, com número + texto + setinha —
+   fácil de tocar certo no celular (área grande, sem precisar mirar) */
+.menu-ajuda-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px; padding: 12px 14px; margin-top: 10px;
+  color: #dfe3ec; font-family: inherit; cursor: pointer; text-align: left;
+  transition: transform 0.15s, border-color 0.2s, background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.menu-ajuda-item:active { transform: scale(0.98); }
+.menu-ajuda-item:hover { border-color: rgba(255,209,102,0.4); background: rgba(255,209,102,0.06); }
+.menu-ajuda-item-num { font-size: 1.1em; flex: 0 0 auto; }
+.menu-ajuda-item-texto { flex: 1 1 auto; font-size: 0.9em; font-weight: 600; line-height: 1.35; }
+.menu-ajuda-item-seta { flex: 0 0 auto; color: #ffd166; font-size: 1.3em; font-weight: 900; opacity: 0.8; }
+
+/* tela de detalhe — mesmo estilo do card de habilidade do carro VIP, pra ficar consistente */
+.menu-ajuda-detalhe { text-align: left; }
+.menu-ajuda-voltar {
+  display: inline-flex; align-items: center; gap: 4px; margin-bottom: 14px;
+  background: rgba(255,255,255,0.08); border: none; border-radius: 999px;
+  color: #cfd6e6; font-family: inherit; font-size: 0.85em; font-weight: 700;
+  padding: 8px 16px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.menu-ajuda-voltar:active { transform: scale(0.96); }
+.menu-ajuda-detalhe-emoji { font-size: 2em; text-align: center; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
+.menu-ajuda-detalhe-titulo {
+  margin: 8px 0 14px; font-size: 1.1em; font-weight: 900; color: #ffd166; text-align: center;
+}
+.menu-ajuda-detalhe-texto {
+  font-size: 0.92em; line-height: 1.65; color: #e6e9f0;
+  background: rgba(255,255,255,0.04); border-radius: 14px; padding: 16px 16px;
+}
+.menu-ajuda-detalhe-texto strong { color: #ffd166; }
+.menu-ajuda-detalhe-texto ul { margin: 6px 0 0; padding-left: 20px; }
+.menu-ajuda-detalhe-texto li { margin-bottom: 6px; }
+.menu-ajuda-texto-intro { margin: 0 0 14px; font-size: 0.92em; line-height: 1.6; color: #e6e9f0; }
+.menu-ajuda-texto-intro strong { color: #ffd166; }
+
+/* grid de Ligas — mesma linguagem visual do grid de carros VIP (cf-carros-grid), só que
+   mais simples: sem precisar de modal, já mostra tudo direto no card (logo + nome + troféus) */
+.menu-ligas-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+}
+.menu-liga-card {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px; padding: 14px 10px 12px;
+}
+.menu-liga-imagem { width: 64px; height: 64px; object-fit: contain; margin-bottom: 6px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); }
+.menu-liga-nome { font-weight: 800; font-size: 0.95em; color: #fff; }
+.menu-liga-trofeus { font-size: 0.78em; color: #ffd166; font-weight: 700; margin-top: 4px; }
+
+@media (min-width: 560px) {
+  .menu-ligas-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+@media (min-width: 560px) {
+  .menu-ajuda-fundo { align-items: center; }
+  .menu-ajuda-card { border-radius: 22px; max-width: 440px; }
+  .rank-modal-fundo { align-items: center; }
+  .rank-modal-card { border-radius: 22px; max-width: 480px; }
+}
