@@ -322,3 +322,99 @@ html, body {
   .topo h1 { font-size: 2.3em; }
   .card-jogador { padding: 12px 16px; }
 }
+
+/* ===================================================================
+   MENU DE AJUDA (interativo) — mesma linguagem visual do resto do site
+   (fundo escuro, dourado #ffd166, cards com leve transparência)
+   =================================================================== */
+
+/* botão flutuante pra reabrir o menu, canto inferior direito — só aparece depois que o
+   menu for fechado (o menu abre sozinho ao entrar no site). Pulsa sozinho, sem parar, pra
+   chamar atenção sem ser irritante */
+.menu-ajuda-fab {
+  position: fixed; right: 18px; bottom: 18px; z-index: 60;
+  width: 56px; height: 56px; border-radius: 50%; border: none; cursor: pointer;
+  background: linear-gradient(145deg, #ffe082, #d4a017); color: #2c1e00;
+  display: flex; align-items: center; justify-content: center; font-size: 1.5em;
+  box-shadow: 0 4px 16px rgba(255,209,102,0.45);
+  animation: menuAjudaFabPulso 2.2s ease-in-out infinite;
+  -webkit-tap-highlight-color: transparent;
+}
+.menu-ajuda-fab:active { transform: scale(0.92); }
+.menu-ajuda-fab[hidden] { display: none; }
+@keyframes menuAjudaFabPulso {
+  0%, 100% { box-shadow: 0 4px 16px rgba(255,209,102,0.45), 0 0 0 0 rgba(255,209,102,0.55); }
+  50% { box-shadow: 0 4px 16px rgba(255,209,102,0.45), 0 0 0 10px rgba(255,209,102,0); }
+}
+
+/* fundo escurecido por trás do modal, igual o modal de detalhe do carro VIP já existente */
+.menu-ajuda-fundo {
+  display: none; position: fixed; inset: 0; z-index: 61;
+  background: rgba(5,5,10,0.78); backdrop-filter: blur(3px);
+  align-items: flex-end; justify-content: center;
+}
+.menu-ajuda-fundo.aberto { display: flex; animation: cfFundoEntrar 0.2s ease; }
+
+.menu-ajuda-card {
+  position: relative; width: 100%; max-width: 480px;
+  background: linear-gradient(165deg, #1c1c28, #0f0f16);
+  border: 1px solid rgba(255,209,102,0.3); border-radius: 22px 22px 0 0;
+  padding: 24px 18px 30px; text-align: center;
+  animation: cfCardSubir 0.25s ease;
+  max-height: 85vh; overflow-y: auto;
+}
+.menu-ajuda-fechar {
+  position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border-radius: 50%;
+  border: none; background: rgba(255,255,255,0.1); color: #fff; font-size: 1em; cursor: pointer;
+  z-index: 2;
+}
+
+.menu-ajuda-topo { margin-bottom: 14px; }
+.menu-ajuda-emoji { font-size: 2.2em; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
+.menu-ajuda-titulo {
+  margin: 6px 0 4px; font-size: 1.25em; font-weight: 900; color: #ffd166;
+  text-shadow: 0 2px 10px rgba(255,209,102,0.3);
+}
+.menu-ajuda-sub { margin: 0; font-size: 0.85em; color: #9aa0ae; }
+
+/* cada opção do menu é um botão-card inteiro clicável, com número + texto + setinha —
+   fácil de tocar certo no celular (área grande, sem precisar mirar) */
+.menu-ajuda-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px; padding: 12px 14px; margin-top: 10px;
+  color: #dfe3ec; font-family: inherit; cursor: pointer; text-align: left;
+  transition: transform 0.15s, border-color 0.2s, background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.menu-ajuda-item:active { transform: scale(0.98); }
+.menu-ajuda-item:hover { border-color: rgba(255,209,102,0.4); background: rgba(255,209,102,0.06); }
+.menu-ajuda-item-num { font-size: 1.1em; flex: 0 0 auto; }
+.menu-ajuda-item-texto { flex: 1 1 auto; font-size: 0.9em; font-weight: 600; line-height: 1.35; }
+.menu-ajuda-item-seta { flex: 0 0 auto; color: #ffd166; font-size: 1.3em; font-weight: 900; opacity: 0.8; }
+
+/* tela de detalhe — mesmo estilo do card de habilidade do carro VIP, pra ficar consistente */
+.menu-ajuda-detalhe { text-align: left; }
+.menu-ajuda-voltar {
+  display: inline-flex; align-items: center; gap: 4px; margin-bottom: 14px;
+  background: rgba(255,255,255,0.08); border: none; border-radius: 999px;
+  color: #cfd6e6; font-family: inherit; font-size: 0.85em; font-weight: 700;
+  padding: 8px 16px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.menu-ajuda-voltar:active { transform: scale(0.96); }
+.menu-ajuda-detalhe-emoji { font-size: 2em; text-align: center; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
+.menu-ajuda-detalhe-titulo {
+  margin: 8px 0 14px; font-size: 1.1em; font-weight: 900; color: #ffd166; text-align: center;
+}
+.menu-ajuda-detalhe-texto {
+  font-size: 0.92em; line-height: 1.65; color: #e6e9f0;
+  background: rgba(255,255,255,0.04); border-radius: 14px; padding: 16px 16px;
+}
+.menu-ajuda-detalhe-texto strong { color: #ffd166; }
+.menu-ajuda-detalhe-texto ul { margin: 6px 0 0; padding-left: 20px; }
+.menu-ajuda-detalhe-texto li { margin-bottom: 6px; }
+
+@media (min-width: 560px) {
+  .menu-ajuda-fundo { align-items: center; }
+  .menu-ajuda-card { border-radius: 22px; max-width: 440px; }
+}
