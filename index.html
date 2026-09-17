@@ -127,7 +127,7 @@
           </div>
           <div class="cf-passo">
             <div class="cf-passo-emoji">🛡️</div>
-            <div class="cf-passo-texto">Digite <strong>"proteção"</strong> no chat pra ficar imune por alguns segundos, ou <strong>"Congelar Carro x"</strong> pra travar quem tá te ameaçando — os dois custam pontos (você ganha pontos a cada volta que seu carro completa na pista), nada de dinheiro.</div>
+            <div class="cf-passo-texto">Digite <strong>"proteção"</strong> no chat pra ficar imune por alguns segundos, ou <strong>"congelar @nome"</strong> pra travar quem tá te ameaçando — os dois custam pontos (você ganha pontos a cada volta que seu carro completa na pista), nada de dinheiro.</div>
           </div>
           <div class="cf-passo">
             <div class="cf-passo-emoji">🎁</div>
@@ -214,10 +214,187 @@
 
   </main>
 
+  <!-- ===== MENU DE AJUDA (interativo) ===== -->
+  <!-- botão flutuante pra reabrir o menu, depois que a pessoa fechar — só aparece nesse
+       momento (começa escondido, já que o menu abre sozinho ao entrar no site) -->
+  <button class="menu-ajuda-fab" id="menu-ajuda-fab" aria-label="Abrir menu de ajuda" title="Menu de ajuda" hidden>
+    <span class="menu-ajuda-fab-icone">📋</span>
+  </button>
+
+  <div class="menu-ajuda-fundo" id="menu-ajuda-fundo">
+    <div class="menu-ajuda-card" id="menu-ajuda-card">
+      <button class="menu-ajuda-fechar" id="menu-ajuda-fechar" aria-label="Fechar menu">✕</button>
+
+      <!-- tela 1: a lista de opções -->
+      <div class="menu-ajuda-lista" id="menu-ajuda-lista">
+        <div class="menu-ajuda-topo">
+          <div class="menu-ajuda-emoji">📋</div>
+          <h2 class="menu-ajuda-titulo">Menu de Ajuda</h2>
+          <p class="menu-ajuda-sub">Toque numa opção pra entender aquela parte do jogo</p>
+        </div>
+        <button class="menu-ajuda-item" data-opcao="1">
+          <span class="menu-ajuda-item-num">1️⃣</span>
+          <span class="menu-ajuda-item-texto">🏁 Como funciona a corrida</span>
+          <span class="menu-ajuda-item-seta">›</span>
+        </button>
+        <button class="menu-ajuda-item" data-opcao="2">
+          <span class="menu-ajuda-item-num">2️⃣</span>
+          <span class="menu-ajuda-item-texto">🪙 Pontos e comandos (proteção/congelar)</span>
+          <span class="menu-ajuda-item-seta">›</span>
+        </button>
+        <button class="menu-ajuda-item" data-opcao="3">
+          <span class="menu-ajuda-item-num">3️⃣</span>
+          <span class="menu-ajuda-item-texto">⚡ Energia e presentes (Turbo, Foguete...)</span>
+          <span class="menu-ajuda-item-seta">›</span>
+        </button>
+        <button class="menu-ajuda-item" data-opcao="4">
+          <span class="menu-ajuda-item-num">4️⃣</span>
+          <span class="menu-ajuda-item-texto">👑 Carros VIP (preços e habilidades)</span>
+          <span class="menu-ajuda-item-seta">›</span>
+        </button>
+        <button class="menu-ajuda-item" data-opcao="5">
+          <span class="menu-ajuda-item-num">5️⃣</span>
+          <span class="menu-ajuda-item-texto">🏆 Ligas e como subir rápido</span>
+          <span class="menu-ajuda-item-seta">›</span>
+        </button>
+        <button class="menu-ajuda-item" data-opcao="6">
+          <span class="menu-ajuda-item-num">6️⃣</span>
+          <span class="menu-ajuda-item-texto">🎯 Indicação (ganhe Energia de graça)</span>
+          <span class="menu-ajuda-item-seta">›</span>
+        </button>
+        <button class="menu-ajuda-item" data-opcao="7">
+          <span class="menu-ajuda-item-num">7️⃣</span>
+          <span class="menu-ajuda-item-texto">💡 Dicas de estratégia vencedora</span>
+          <span class="menu-ajuda-item-seta">›</span>
+        </button>
+      </div>
+
+      <!-- tela 2: o detalhe da opção escolhida (some por padrão, aparece ao clicar num item) -->
+      <div class="menu-ajuda-detalhe" id="menu-ajuda-detalhe" hidden>
+        <button class="menu-ajuda-voltar" id="menu-ajuda-voltar">‹ Voltar ao menu</button>
+        <div class="menu-ajuda-detalhe-emoji" id="menu-ajuda-detalhe-emoji"></div>
+        <h3 class="menu-ajuda-detalhe-titulo" id="menu-ajuda-detalhe-titulo"></h3>
+        <div class="menu-ajuda-detalhe-texto" id="menu-ajuda-detalhe-texto"></div>
+      </div>
+    </div>
+  </div>
+
   <footer class="rodape">
     <span id="status-conexao">🔄 Conectando...</span>
   </footer>
 
   <script type="module" src="ranking.js"></script>
+  <script>
+    // ===== Menu de Ajuda (interativo) — não mexe em nada do ranking.js, roda por conta própria =====
+    (function menuDeAjuda() {
+      const CONTEUDO = {
+        1: {
+          emoji: '🏁',
+          titulo: 'Como funciona a corrida',
+          texto: `O cronômetro de inscrições abre — curta ou comente no vídeo e seu carro já entra na pista.<br><br>
+            Quando o cronômetro zera, a corrida começa pra valer — depois disso ninguém mais entra, só na próxima.<br><br>
+            Quem completa as voltas primeiro vence. No final, aparece o pódio com a classificação: quem ficou em 1º recebe <strong>10 troféus</strong>, 2º lugar <strong>7</strong> e 3º lugar <strong>5</strong>.`,
+        },
+        2: {
+          emoji: '🪙',
+          titulo: 'Pontos e comandos',
+          texto: `Você ganha pontos toda vez que completa uma volta: <strong>1º = 30</strong>, <strong>2º = 20</strong>, <strong>3º = 15</strong>, do 4º em diante = <strong>10</strong>.<br><br>
+            Com pelo menos 10 pontos guardados, dá pra digitar no chat:
+            <ul>
+              <li>🛡️ <strong>"proteção"</strong> — fica com escudo (10 pontos = 5s, escala: cada 10 pontos a mais = +5s)</li>
+              <li>❄️ <strong>"congelar carro N"</strong> — trava o carro que te ameaça (10 pontos = 2s, escala do mesmo jeito)</li>
+            </ul>`,
+        },
+        3: {
+          emoji: '⚡',
+          titulo: 'Energia e presentes',
+          texto: `Presentes dão Energia e ativam turbos cada vez mais fortes:
+            <ul>
+              <li>🟡 <strong>Turbo</strong> — 1⚡, acelera 3s</li>
+              <li>🟢 <strong>Turbo Rápido</strong> — 5⚡, acelera mais forte</li>
+              <li>🔵 <strong>Turbo Max</strong> — 30⚡, acelera + escudo de 5s</li>
+              <li>🟠 <strong>Turbo Mega</strong> — 99⚡, acelera + escudo + congela quem tá atrás</li>
+              <li>🔴 <strong>Foguete</strong> — 299⚡, o mais forte: congela TODOS os outros carros</li>
+            </ul>
+            A Energia nunca se perde: ela também conta pro ranking de 🪙 Pontos.`,
+        },
+        4: {
+          emoji: '👑',
+          titulo: 'Carros VIP',
+          texto: `São 13 carros especiais, cada um com uma habilidade única — trava quem tá atrás, escudo automático, congela todo mundo, copia impulso, e muito mais.<br><br>
+            Digite o nome do carro no chat pra correr com ele, se já tiver Energia suficiente acumulada (quanto mais forte o carro, mais Energia — e às vezes uma Liga mínima — ele exige). Digite <strong>"classic"</strong> pra voltar ao carro padrão quando quiser.<br><br>
+            Veja o preço e a habilidade de cada um na aba <strong>🚗 CARROS VIP</strong>, mais abaixo nesse site.`,
+        },
+        5: {
+          emoji: '🏆',
+          titulo: 'Ligas e como subir rápido',
+          texto: `Ligas são <strong>permanentes</strong> (nunca zeram) e sobem com troféus, ganhos ao final de cada corrida: 1º = 10, 2º = 7, 3º = 5, do 4º ao 10º = 2, do 11º em diante = 1.<br><br>
+            <strong>Dica pra subir rápido:</strong> corra TODA corrida, mesmo sem vencer — ficar entre os 10 primeiros já rende, e isso soma rápido com constância. Ficar em 1º sempre que possível multiplica o ganho.`,
+        },
+        6: {
+          emoji: '🎯',
+          titulo: 'Indicação',
+          texto: `Comente <strong>"indico @seuamigo"</strong> na live (usando a menção @ de verdade do TikTok) — se ele realmente aparecer curtindo ou comentando pela primeira vez, você ganha Energia de bônus.<br><br>
+            É de graça e ajuda a crescer mais rápido — tanto você quanto a comunidade.`,
+        },
+        7: {
+          emoji: '💡',
+          titulo: 'Dicas de estratégia vencedora',
+          texto: `<ul>
+              <li>Sempre entre na corrida curtindo/comentando nas inscrições — é de graça</li>
+              <li>Guarde pontos em vez de gastar tudo cedo — proteção e congelamento ficam mais fortes com mais pontos de uma vez</li>
+              <li>Proteja-se <strong>antes</strong> de ser atacado, não depois</li>
+              <li>Congele quem tá logo atrás de você perto da linha de chegada — é o momento que mais compensa</li>
+              <li>Corra todo dia, mesmo corridas que não vai ganhar — troféus se acumulam com constância</li>
+              <li>Junte Energia aos poucos com presentes pequenos — ela nunca se perde</li>
+            </ul>`,
+        },
+      };
+
+      const fundo = document.getElementById('menu-ajuda-fundo');
+      const fab = document.getElementById('menu-ajuda-fab');
+      const lista = document.getElementById('menu-ajuda-lista');
+      const detalhe = document.getElementById('menu-ajuda-detalhe');
+      const detalheEmoji = document.getElementById('menu-ajuda-detalhe-emoji');
+      const detalheTitulo = document.getElementById('menu-ajuda-detalhe-titulo');
+      const detalheTexto = document.getElementById('menu-ajuda-detalhe-texto');
+
+      function abrirMenu() {
+        fundo.classList.add('aberto');
+        fab.hidden = true;
+      }
+      function fecharMenu() {
+        fundo.classList.remove('aberto');
+        fab.hidden = false;
+      }
+      function mostrarLista() {
+        detalhe.hidden = true;
+        lista.hidden = false;
+      }
+      function mostrarOpcao(numero) {
+        const item = CONTEUDO[numero];
+        if (!item) return;
+        detalheEmoji.textContent = item.emoji;
+        detalheTitulo.textContent = item.titulo;
+        detalheTexto.innerHTML = item.texto;
+        lista.hidden = true;
+        detalhe.hidden = false;
+        detalhe.scrollTop = 0;
+      }
+
+      // abre sozinho assim que a página carrega
+      abrirMenu();
+
+      document.getElementById('menu-ajuda-fechar').addEventListener('click', fecharMenu);
+      fab.addEventListener('click', () => { abrirMenu(); mostrarLista(); });
+      document.getElementById('menu-ajuda-voltar').addEventListener('click', mostrarLista);
+      // clicar fora do card (no fundo escurecido) também fecha, igual o modal do carro VIP
+      fundo.addEventListener('click', (e) => { if (e.target === fundo) fecharMenu(); });
+
+      document.querySelectorAll('.menu-ajuda-item').forEach((botao) => {
+        botao.addEventListener('click', () => mostrarOpcao(botao.dataset.opcao));
+      });
+    })();
+  </script>
 </body>
 </html>
