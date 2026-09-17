@@ -24,7 +24,10 @@
     <button class="aba" data-aba="moedas" role="tab" aria-selected="false">🪙 PONTOS</button>
   </nav>
 
-  <main class="conteudo">
+  <div class="rank-modal-fundo" id="rank-modal-fundo">
+    <div class="rank-modal-card">
+      <button class="rank-modal-fechar" id="rank-modal-fechar" aria-label="Fechar ranking">✕</button>
+      <main class="conteudo">
 
     <!-- ===== RANKING DIÁRIO ===== -->
     <section class="painel-ranking" id="painel-diario" data-ranking="diario">
@@ -122,6 +125,8 @@
     </div>
 
   </main>
+    </div>
+  </div>
 
   <!-- ===== MENU DE AJUDA (interativo) ===== -->
   <!-- botão flutuante pra reabrir o menu, depois que a pessoa fechar — só aparece nesse
@@ -285,6 +290,11 @@
       function fecharMenu() {
         fundo.classList.remove('aberto');
         fab.hidden = false;
+        // 🆕 ao fechar o Menu de Ajuda, já abre a janela do ranking (a aba que já tiver
+        // marcada como ativa — "Dia Anterior" por padrão) em vez de deixar a pessoa numa
+        // tela vazia
+        const modalRanking = document.getElementById('rank-modal-fundo');
+        if (modalRanking) modalRanking.classList.add('aberto');
       }
       function mostrarLista() {
         detalhe.hidden = true;
@@ -318,6 +328,12 @@
       document.querySelectorAll('.menu-ajuda-item').forEach((botao) => {
         botao.addEventListener('click', () => mostrarOpcao(botao.dataset.opcao));
       });
+
+      // ===== Janela do Ranking (Diário/Dia Anterior/Semanal/Mensal/Ligas/Pontos) =====
+      const rankFundo = document.getElementById('rank-modal-fundo');
+      document.getElementById('rank-modal-fechar').addEventListener('click', () => rankFundo.classList.remove('aberto'));
+      // clicar fora do card (no fundo escurecido) também fecha, igual os outros modais
+      rankFundo.addEventListener('click', (e) => { if (e.target === rankFundo) rankFundo.classList.remove('aberto'); });
     })();
   </script>
 </body>
