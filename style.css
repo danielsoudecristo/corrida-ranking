@@ -272,7 +272,7 @@ html, body {
 
 /* modal de detalhe — some por padrão, some centralizado por cima de tudo quando aberto */
 .cf-modal-fundo {
-  display: none; position: fixed; inset: 0; z-index: 50;
+  display: none; position: fixed; inset: 0; z-index: 65;
   background: rgba(5,5,10,0.75); backdrop-filter: blur(3px);
   align-items: flex-end; justify-content: center;
 }
