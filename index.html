@@ -18,8 +18,8 @@
   </header>
 
   <nav class="abas" role="tablist" aria-label="Escolha o ranking">
-    <button class="aba ativa" data-aba="diario" role="tab" aria-selected="true">🏆 DIÁRIO</button>
-    <button class="aba" data-aba="diaAnterior" role="tab" aria-selected="false">🏆 DIA ANTERIOR</button>
+    <button class="aba" data-aba="diario" role="tab" aria-selected="false">🏆 DIÁRIO</button>
+    <button class="aba ativa" data-aba="diaAnterior" role="tab" aria-selected="true">📋 DIA ANTERIOR</button>
     <button class="aba" data-aba="semanal" role="tab" aria-selected="false">📅 SEMANAL</button>
     <button class="aba" data-aba="mensal" role="tab" aria-selected="false">🗓️ MENSAL</button>
     <button class="aba" data-aba="ligas" role="tab" aria-selected="false">🏅 LIGAS</button>
@@ -29,7 +29,7 @@
   <main class="conteudo">
 
     <!-- ===== RANKING DIÁRIO ===== -->
-    <section class="painel-ranking ativa" id="painel-diario" data-ranking="diario">
+    <section class="painel-ranking" id="painel-diario" data-ranking="diario">
       <div class="info-periodo" id="info-periodo-diario"></div>
       <div class="busca-wrap">
         <span class="busca-icone">🔎</span>
@@ -43,7 +43,7 @@
     </section>
 
     <!-- ===== RANKING DO DIA ANTERIOR ===== -->
-    <section class="painel-ranking" id="painel-diaAnterior" data-ranking="diaAnterior">
+    <section class="painel-ranking ativa" id="painel-diaAnterior" data-ranking="diaAnterior">
       <div class="info-periodo" id="info-periodo-diaAnterior"></div>
       <div class="busca-wrap">
         <span class="busca-icone">🔎</span>
