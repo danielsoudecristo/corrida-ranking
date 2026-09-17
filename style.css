@@ -413,6 +413,26 @@ html, body {
 .menu-ajuda-detalhe-texto strong { color: #ffd166; }
 .menu-ajuda-detalhe-texto ul { margin: 6px 0 0; padding-left: 20px; }
 .menu-ajuda-detalhe-texto li { margin-bottom: 6px; }
+.menu-ajuda-texto-intro { margin: 0 0 14px; font-size: 0.92em; line-height: 1.6; color: #e6e9f0; }
+.menu-ajuda-texto-intro strong { color: #ffd166; }
+
+/* grid de Ligas — mesma linguagem visual do grid de carros VIP (cf-carros-grid), só que
+   mais simples: sem precisar de modal, já mostra tudo direto no card (logo + nome + troféus) */
+.menu-ligas-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+}
+.menu-liga-card {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px; padding: 14px 10px 12px;
+}
+.menu-liga-imagem { width: 64px; height: 64px; object-fit: contain; margin-bottom: 6px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); }
+.menu-liga-nome { font-weight: 800; font-size: 0.95em; color: #fff; }
+.menu-liga-trofeus { font-size: 0.78em; color: #ffd166; font-weight: 700; margin-top: 4px; }
+
+@media (min-width: 560px) {
+  .menu-ligas-grid { grid-template-columns: repeat(4, 1fr); }
+}
 
 @media (min-width: 560px) {
   .menu-ajuda-fundo { align-items: center; }
