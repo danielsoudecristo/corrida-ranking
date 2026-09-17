@@ -87,7 +87,7 @@ function iniciaisDe(usuario) {
 const SVG_COROA = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18l-1.4-8.2-4.6 3.4L12 6l-3 7.2-4.6-3.4L3 18z"/></svg>`;
 
 // guarda os dados já carregados de cada ranking, pra busca não precisar ir no banco de novo
-const cache = { diario: [], semanal: [], mensal: [], ligas: [], moedas: [] };
+const cache = { diario: [], diaAnterior: [], semanal: [], mensal: [], ligas: [], moedas: [] };
 
 // ---------------------------------------------------------------------------
 // carregamento dos 3 rankings
@@ -100,7 +100,7 @@ const LIMITE_LINHAS = 5000;
 async function carregarRanking(chave) {
   const container = document.getElementById(`lista-${chave}`);
   try {
-    const nomeView = chave === 'diario' ? 'ranking_diario' : chave === 'semanal' ? 'ranking_semanal' : chave === 'mensal' ? 'ranking_mensal' : chave === 'moedas' ? 'ranking_moedas' : 'ranking_ligas';
+    const nomeView = chave === 'diario' ? 'ranking_diario' : chave === 'diaAnterior' ? 'ranking_dia_anterior' : chave === 'semanal' ? 'ranking_semanal' : chave === 'mensal' ? 'ranking_mensal' : chave === 'moedas' ? 'ranking_moedas' : 'ranking_ligas';
     // campo usado pra ordenar CADA ranking — ligas usa o troféu permanente da liga; diário,
     // semanal e mensal usam "pontos" (que já é o troféu do período certo, calculado pela
     // view); a aba "🪙 PONTOS" (chave interna "moedas", por compatibilidade com a coluna
@@ -191,6 +191,11 @@ function atualizarContagens() {
   const hDia = Math.floor(msAteMeiaNoite / 3600000);
   const mDia = Math.floor((msAteMeiaNoite % 3600000) / 60000);
   document.getElementById('info-periodo-diario').textContent = `Dia ${agora.getDate()} · ⏳ Restam ${hDia}h ${mDia}min`;
+
+  // dia anterior é uma FOTO congelada (tirada às 23:59 de ontem) — não tem contagem
+  // regressiva nenhuma, mostra só um aviso fixo explicando o que é
+  const elDiaAnterior = document.getElementById('info-periodo-diaAnterior');
+  if (elDiaAnterior) elDiaAnterior.textContent = '📋 Foto do ranking de ontem, às 23:59 — não muda mais';
 
   const diaSemana = agora.getDay(); // 0=domingo
   const NOMES_DIAS_SEMANA_PT = ['Domingo', 'Segunda-Feira', 'Terça-Feira', 'Quarta-Feira', 'Quinta-Feira', 'Sexta-Feira', 'Sábado'];
@@ -298,10 +303,11 @@ function configurarAbas() {
 }
 
 // ===================================================================
-// COMO FUNCIONA — dados dos 13 carros VIP (mesmo texto/regra do jogo,
-// CARROS_VIP_PADRAO no server.js) + grid clicável + modal de detalhe.
-// Isso aqui é conteúdo ESTÁTICO (não vem do Supabase) — só uma explicação
-// bonita pra quem nunca jogou entender rapidinho.
+// MENU DE AJUDA — dados dos 13 carros VIP e das 8 Ligas (mesmo texto/regra
+// do jogo, CARROS_VIP_PADRAO/LIGAS no server.js), usados pelos grids do
+// Menu de Ajuda em index.html (montarGridCarrosVip/montarGridLigas, mais
+// abaixo). Isso aqui é conteúdo ESTÁTICO (não vem do Supabase) — só uma
+// explicação bonita pra quem nunca jogou entender rapidinho.
 // ===================================================================
 const CARROS_VIP_INFO = [
   { nome: 'Street', preco: 1000, imagem: 'Street.png',
@@ -375,31 +381,55 @@ function fecharModalCarro() {
   document.getElementById('cf-modal-fundo').classList.remove('aberto');
 }
 
-function prepararComoFunciona() {
-  const grid = document.getElementById('cf-carros-grid');
-  grid.innerHTML = CARROS_VIP_INFO.map(cfCarroCardHtml).join('');
-  grid.querySelectorAll('.cf-carro-card').forEach((el) => {
-    el.addEventListener('click', () => abrirModalCarro(CARROS_VIP_INFO[Number(el.dataset.indice)]));
-  });
+// liga o botão de fechar + clicar fora do modal de detalhe do carro — chamado UMA VEZ, na
+// largada (o modal em si fica fora do Menu de Ajuda, reaproveitado por ele)
+function prepararModalCarro() {
   document.getElementById('cf-modal-fechar').addEventListener('click', fecharModalCarro);
   document.getElementById('cf-modal-fundo').addEventListener('click', (e) => {
     if (e.target.id === 'cf-modal-fundo') fecharModalCarro(); // clicou fora do card, fecha
   });
 }
 
+// monta o grid de carros VIP dentro do container indicado — exposta em "window" pra o
+// Menu de Ajuda (script separado, em index.html) poder chamar toda vez que a pessoa abrir
+// a opção "Carros VIP" (não dá pra montar só uma vez: o innerHTML daquela opção é
+// reconstruído do zero cada vez que ela é aberta, pra poder trocar de opção livremente)
+window.montarGridCarrosVip = function montarGridCarrosVip(containerId) {
+  const grid = document.getElementById(containerId);
+  if (!grid) return;
+  grid.innerHTML = CARROS_VIP_INFO.map(cfCarroCardHtml).join('');
+  grid.querySelectorAll('.cf-carro-card').forEach((el) => {
+    el.addEventListener('click', () => abrirModalCarro(CARROS_VIP_INFO[Number(el.dataset.indice)]));
+  });
+};
+
+// monta o grid de Ligas (logo + quantidade de troféus necessária de cada uma) — mesma
+// ideia do grid de carros, exposta em "window" pelo mesmo motivo
+window.montarGridLigas = function montarGridLigas(containerId) {
+  const grid = document.getElementById(containerId);
+  if (!grid) return;
+  grid.innerHTML = LIGAS.map((liga) => `
+    <div class="menu-liga-card">
+      <img class="menu-liga-imagem" src="liga/${liga.icone}" alt="${liga.nome}" onerror="this.style.opacity='0.15'">
+      <div class="menu-liga-nome">${liga.nome}</div>
+      <div class="menu-liga-trofeus">🏆 ${liga.trofeus.toLocaleString('pt-BR')} troféus</div>
+    </div>`).join('');
+};
+
 // ---------------------------------------------------------------------------
 // início
 // ---------------------------------------------------------------------------
 async function iniciar() {
   configurarAbas();
-  ['diario', 'semanal', 'mensal', 'ligas', 'moedas'].forEach(configurarBusca);
+  ['diario', 'diaAnterior', 'semanal', 'mensal', 'ligas', 'moedas'].forEach(configurarBusca);
   atualizarContagens();
   setInterval(atualizarContagens, 30000); // atualiza a contagem regressiva a cada 30s
-  prepararComoFunciona(); // conteúdo estático, monta uma vez só, não depende do Supabase
+  prepararModalCarro(); // liga o botão de fechar do modal de detalhe do carro VIP — os grids em si são montados sob demanda pelo Menu de Ajuda (ver index.html), não aqui
 
   const statusEl = document.getElementById('status-conexao');
   const resultados = await Promise.all([
     carregarRanking('diario'),
+    carregarRanking('diaAnterior'),
     carregarRanking('semanal'),
     carregarRanking('mensal'),
     carregarRanking('ligas'),
