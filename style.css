@@ -364,6 +364,32 @@ html, body {
   z-index: 2;
 }
 
+/* modal do RANKING (Diário/Dia Anterior/Semanal/Mensal/Ligas/Pontos) — mesmo visual do
+   Menu de Ajuda (fundo escurecido + card subindo de baixo), só que mostrando o conteúdo
+   que já existia em <main class="conteudo"> (os 6 painéis, a busca, etc — nada mudou ali
+   dentro, só passou a aparecer dentro de uma janela em vez de solto na página) */
+.rank-modal-fundo {
+  display: none; position: fixed; inset: 0; z-index: 61;
+  background: rgba(5,5,10,0.78); backdrop-filter: blur(3px);
+  align-items: flex-end; justify-content: center;
+}
+.rank-modal-fundo.aberto { display: flex; animation: cfFundoEntrar 0.2s ease; }
+
+.rank-modal-card {
+  position: relative; width: 100%; max-width: 480px;
+  background: linear-gradient(165deg, #1c1c28, #0f0f16);
+  border: 1px solid rgba(255,209,102,0.3); border-radius: 22px 22px 0 0;
+  padding: 44px 0 6px; text-align: left;
+  animation: cfCardSubir 0.25s ease;
+  max-height: 85vh; overflow-y: auto;
+}
+.rank-modal-card .conteudo { padding: 6px 16px 10px; max-width: none; margin: 0; }
+.rank-modal-fechar {
+  position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border-radius: 50%;
+  border: none; background: rgba(255,255,255,0.12); color: #fff; font-size: 1em; cursor: pointer;
+  z-index: 2;
+}
+
 .menu-ajuda-topo { margin-bottom: 14px; }
 .menu-ajuda-emoji { font-size: 2.2em; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
 .menu-ajuda-titulo {
@@ -432,4 +458,6 @@ html, body {
 @media (min-width: 560px) {
   .menu-ajuda-fundo { align-items: center; }
   .menu-ajuda-card { border-radius: 22px; max-width: 440px; }
+  .rank-modal-fundo { align-items: center; }
+  .rank-modal-card { border-radius: 22px; max-width: 480px; }
 }
