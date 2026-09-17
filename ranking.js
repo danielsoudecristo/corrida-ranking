@@ -422,6 +422,51 @@ window.montarGridLigas = function montarGridLigas(containerId) {
 };
 
 // ---------------------------------------------------------------------------
+// HALL DA FAMA — top 3 por vitórias (1º lugar), com 2º e 3º lugar mostrados
+// lado a lado. Reaproveita o MESMO card de ranking (.card-jogador.ouro/prata/
+// bronze) — só troca a parte da direita (um número só) pelas 3 contagens.
+// ---------------------------------------------------------------------------
+function hallFamaCardHtml(posicao, j) {
+  const classeMedalha = posicao === 1 ? 'ouro' : posicao === 2 ? 'prata' : 'bronze';
+  const coroaHtml = `<div class="card-coroa ${classeMedalha}">${SVG_COROA}</div>`;
+  const iniciais = iniciaisDe(j.usuario);
+  const fotoHtml = j.foto
+    ? `<img src="${j.foto}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+       <span class="card-avatar-fallback" style="display:none;">${iniciais}</span>`
+    : `<span class="card-avatar-fallback" style="display:flex;">${iniciais}</span>`;
+  return `
+    <div class="card-jogador ${classeMedalha}" data-usuario="${(j.usuario || '').toLowerCase()}">
+      ${coroaHtml}
+      <div class="card-avatar">${fotoHtml}</div>
+      <div class="card-info"><div class="card-nome">${j.usuario}</div></div>
+      <div class="hall-fama-contagem">
+        <div class="hf-item hf-1"><span class="hf-num">${Number(j.vitorias) || 0}</span><span class="hf-emoji">🥇</span></div>
+        <div class="hf-item hf-2"><span class="hf-num">${Number(j.segundos) || 0}</span><span class="hf-emoji">🥈</span></div>
+        <div class="hf-item hf-3"><span class="hf-num">${Number(j.terceiros) || 0}</span><span class="hf-emoji">🥉</span></div>
+      </div>
+    </div>`;
+}
+
+async function carregarHallDaFama() {
+  const container = document.getElementById('hall-fama-lista');
+  if (!container) return;
+  try {
+    // a view ranking_hall_fama já vem ordenada (vitórias desc, depois segundos, depois
+    // terceiros) — só pego os 3 primeiros, como pedido
+    const { data, error } = await supabase.from('ranking_hall_fama').select('*').limit(3);
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      container.innerHTML = '<p class="estado-info">Ainda não tem ninguém no pódio.</p>';
+      return;
+    }
+    container.innerHTML = data.map((j, i) => hallFamaCardHtml(i + 1, j)).join('');
+  } catch (e) {
+    console.warn('Não consegui carregar o Hall da Fama:', e.message);
+    container.innerHTML = '<p class="estado-info erro">⚠️ Não consegui carregar o Hall da Fama agora.</p>';
+  }
+}
+
+// ---------------------------------------------------------------------------
 // início
 // ---------------------------------------------------------------------------
 async function iniciar() {
@@ -430,6 +475,7 @@ async function iniciar() {
   atualizarContagens();
   setInterval(atualizarContagens, 30000); // atualiza a contagem regressiva a cada 30s
   prepararModalCarro(); // liga o botão de fechar do modal de detalhe do carro VIP — os grids em si são montados sob demanda pelo Menu de Ajuda (ver index.html), não aqui
+  carregarHallDaFama(); // top 3 do pódio, sempre visível na página (não depende de abrir nenhuma janela)
 
   const statusEl = document.getElementById('status-conexao');
   const resultados = await Promise.all([
