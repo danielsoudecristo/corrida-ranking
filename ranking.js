@@ -516,7 +516,7 @@ async function abrirPerfilDoJogador(usuario) {
     const desbloqueados = Array.isArray(j.carros_vip_desbloqueados) ? j.carros_vip_desbloqueados : [];
     const carroAtivo = j.carro_vip_ativo || null;
     const carrosHtml = [
-      carroPerfilCardHtml('Classic', 'carro.png', true, !carroAtivo),
+      carroPerfilCardHtml('Classic', 'Classic.png', true, !carroAtivo),
       ...CARROS_VIP_INFO.map((c) => carroPerfilCardHtml(c.nome, c.imagem, desbloqueados.includes(c.nome), carroAtivo === c.nome)),
     ].join('');
 
