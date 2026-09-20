@@ -467,6 +467,84 @@ async function carregarHallDaFama() {
 }
 
 // ---------------------------------------------------------------------------
+// PERFIL DO JOGADOR — abre ao clicar em QUALQUER card de ranking, em qualquer
+// lista (Diário/Dia Anterior/Semanal/Mensal/Ligas/Pontos/Hall da Fama — todos
+// usam a mesma classe .card-jogador, então um clique só cobre todos, ver a
+// delegação de evento dentro de iniciar()). Mostra troféus, pontos, Energia
+// disponível, pódios do MÊS (zera todo dia 1º, junto com o Hall da Fama) e
+// quais carros (Classic + os 13 VIP) já foram desbloqueados.
+function medalhaPerfilHtml(valor, emoji, cor) {
+  return `<div style="display:flex;flex-direction:column;align-items:center;">
+    <span style="font-weight:900;font-size:1.3em;color:${cor};">${Number(valor) || 0}</span>
+    <span style="font-size:1.1em;margin-top:2px;">${emoji}</span>
+  </div>`;
+}
+function carroPerfilCardHtml(nome, imagem, desbloqueado, ativo) {
+  // bloqueado = cinza/escurecido com cadeado por cima (ver .perfil-carro-card.bloqueado no
+  // CSS); desbloqueado = cor viva normal, sem nada por cima
+  return `
+    <div class="perfil-carro-card ${desbloqueado ? '' : 'bloqueado'} ${ativo ? 'ativo' : ''}">
+      <img class="perfil-carro-imagem" src="${imagem}" alt="${nome}" onerror="this.style.opacity='0.15'">
+      <div class="perfil-carro-nome">${nome}</div>
+    </div>`;
+}
+async function abrirPerfilDoJogador(usuario) {
+  const fundo = document.getElementById('perfil-modal-fundo');
+  const conteudo = document.getElementById('perfil-modal-conteudo');
+  conteudo.innerHTML = '<p class="estado-info">Carregando perfil...</p>';
+  fundo.classList.add('aberto');
+  try {
+    const { data, error } = await supabase.from('perfil_publico').select('*').ilike('usuario', usuario).limit(1);
+    if (error) throw error;
+    const j = data && data[0];
+    if (!j) {
+      conteudo.innerHTML = '<p class="estado-info erro">⚠️ Não achei esse jogador.</p>';
+      return;
+    }
+    const liga = getLigaPorTrofeus(j.trofeus_total);
+    const iniciais = iniciaisDe(j.usuario);
+    const fotoHtml = j.foto
+      ? `<img src="${j.foto}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+         <span class="card-avatar-fallback" style="display:none;">${iniciais}</span>`
+      : `<span class="card-avatar-fallback" style="display:flex;">${iniciais}</span>`;
+    const ligaHtml = liga
+      ? `<div class="perfil-liga"><img src="liga/${liga.icone}" alt="${liga.nome}"> ${liga.nome}</div>`
+      : `<div class="perfil-sem-liga">Sem liga ainda</div>`;
+
+    // "Classic" (o carro padrão, sempre disponível pra todo mundo) + os 13 carros VIP,
+    // checando cada um contra a lista de desbloqueados que vem do Supabase
+    const desbloqueados = Array.isArray(j.carros_vip_desbloqueados) ? j.carros_vip_desbloqueados : [];
+    const carroAtivo = j.carro_vip_ativo || null;
+    const carrosHtml = [
+      carroPerfilCardHtml('Classic', 'carro.png', true, !carroAtivo),
+      ...CARROS_VIP_INFO.map((c) => carroPerfilCardHtml(c.nome, c.imagem, desbloqueados.includes(c.nome), carroAtivo === c.nome)),
+    ].join('');
+
+    conteudo.innerHTML = `
+      <div class="perfil-avatar">${fotoHtml}</div>
+      <div class="perfil-nome">${j.usuario}</div>
+      ${ligaHtml}
+      <div class="perfil-stats">
+        <div class="perfil-stat"><div class="perfil-stat-valor">${(Number(j.trofeus_total) || 0).toLocaleString('pt-BR')}</div><div class="perfil-stat-label">TROFÉUS</div></div>
+        <div class="perfil-stat"><div class="perfil-stat-valor">${(Number(j.pontos) || 0).toLocaleString('pt-BR')}</div><div class="perfil-stat-label">PONTOS</div></div>
+        <div class="perfil-stat"><div class="perfil-stat-valor">${(Number(j.energia) || 0).toLocaleString('pt-BR')}</div><div class="perfil-stat-label">⚡ ENERGIA</div></div>
+      </div>
+      <div class="perfil-podios-titulo">🏆 Pódios esse mês (zera todo dia 1º)</div>
+      <div class="perfil-podios">
+        ${medalhaPerfilHtml(j.vitorias_mes, '🥇', '#ffd700')}
+        ${medalhaPerfilHtml(j.segundos_mes, '🥈', '#d9dee5')}
+        ${medalhaPerfilHtml(j.terceiros_mes, '🥉', '#cd7f32')}
+      </div>
+      <div class="perfil-carros-titulo">🚗 Carros</div>
+      <div class="perfil-carros-grid">${carrosHtml}</div>
+    `;
+  } catch (e) {
+    console.warn('Não consegui carregar o perfil:', e.message);
+    conteudo.innerHTML = '<p class="estado-info erro">⚠️ Não consegui carregar o perfil agora.</p>';
+  }
+}
+
+// ---------------------------------------------------------------------------
 // início
 // ---------------------------------------------------------------------------
 async function iniciar() {
@@ -476,6 +554,20 @@ async function iniciar() {
   setInterval(atualizarContagens, 30000); // atualiza a contagem regressiva a cada 30s
   prepararModalCarro(); // liga o botão de fechar do modal de detalhe do carro VIP — os grids em si são montados sob demanda pelo Menu de Ajuda (ver index.html), não aqui
   carregarHallDaFama(); // top 3 do pódio, sempre visível na página (não depende de abrir nenhuma janela)
+
+  // 👤 Perfil do Jogador — delegação de evento (não precisa religar toda vez que uma lista
+  // é redesenhada): clicar em QUALQUER card .card-jogador, em qualquer lugar da página
+  // (Diário/Dia Anterior/Semanal/Mensal/Ligas/Pontos/Hall da Fama), abre o perfil dele
+  document.addEventListener('click', (e) => {
+    const card = e.target.closest('.card-jogador');
+    if (card && card.dataset.usuario) abrirPerfilDoJogador(card.dataset.usuario);
+  });
+  document.getElementById('perfil-modal-fechar').addEventListener('click', () => {
+    document.getElementById('perfil-modal-fundo').classList.remove('aberto');
+  });
+  document.getElementById('perfil-modal-fundo').addEventListener('click', (e) => {
+    if (e.target.id === 'perfil-modal-fundo') document.getElementById('perfil-modal-fundo').classList.remove('aberto');
+  });
 
   const statusEl = document.getElementById('status-conexao');
   const resultados = await Promise.all([
