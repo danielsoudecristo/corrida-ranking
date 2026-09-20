@@ -107,8 +107,10 @@ html, body {
 .card-jogador {
   display: flex; align-items: center; gap: 10px;
   background: rgba(255,255,255,0.045); border-radius: 14px; padding: 10px 12px;
-  min-height: 60px;
+  min-height: 60px; cursor: pointer; transition: transform 0.12s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
 }
+.card-jogador:active { transform: scale(0.98); background: rgba(255,255,255,0.08); }
 /* coroa do 1º/2º/3º lugar, no lugar da antiga medalha emoji — igual ao jogo. O box fica
    sempre com o mesmo tamanho (mesmo vazio pra quem não é top 3), pra manter alinhada a
    posição de todas as linhas */
@@ -411,6 +413,73 @@ html, body {
   position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border-radius: 50%;
   border: none; background: rgba(255,255,255,0.12); color: #fff; font-size: 1em; cursor: pointer;
   z-index: 2;
+}
+
+/* ===================================================================
+   PERFIL DO JOGADOR — mesmo padrão visual dos outros modais (fundo
+   escurecido + card subindo de baixo), z-index mais alto que os
+   outros porque abre DE DENTRO de uma janela de ranking já aberta
+   =================================================================== */
+.perfil-modal-fundo {
+  display: none; position: fixed; inset: 0; z-index: 70;
+  background: rgba(5,5,10,0.82); backdrop-filter: blur(3px);
+  align-items: flex-end; justify-content: center;
+}
+.perfil-modal-fundo.aberto { display: flex; animation: cfFundoEntrar 0.2s ease; }
+.perfil-modal-card {
+  position: relative; width: 100%; max-width: 460px;
+  background: linear-gradient(165deg, #1c1c28, #0f0f16);
+  border: 1px solid rgba(255,209,102,0.3); border-radius: 22px 22px 0 0;
+  padding: 26px 20px 30px; text-align: center;
+  animation: cfCardSubir 0.25s ease;
+  max-height: 88vh; overflow-y: auto;
+}
+.perfil-modal-fechar {
+  position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border-radius: 50%;
+  border: none; background: rgba(255,255,255,0.12); color: #fff; font-size: 1em; cursor: pointer;
+  z-index: 2;
+}
+
+/* cabeçalho: avatar grande + nome + liga */
+.perfil-avatar {
+  width: 84px; height: 84px; border-radius: 50%; margin: 0 auto 10px;
+  background-color: #2a2a3a; overflow: hidden; border: 3px solid rgba(255,209,102,0.4);
+}
+.perfil-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.perfil-nome { font-size: 1.3em; font-weight: 900; color: #fff; }
+.perfil-liga { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 6px; font-size: 0.85em; color: #cfd6e6; font-weight: 700; }
+.perfil-liga img { width: 22px; height: 22px; object-fit: contain; }
+.perfil-sem-liga { font-size: 0.85em; color: #9aa0ae; margin-top: 6px; }
+
+/* grade de estatísticas (troféus / pontos / energia) */
+.perfil-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 18px 0; }
+.perfil-stat { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 10px 6px; }
+.perfil-stat-valor { font-size: 1.2em; font-weight: 900; color: #ffd166; }
+.perfil-stat-label { font-size: 0.68em; color: #9aa0ae; font-weight: 700; letter-spacing: 0.3px; margin-top: 2px; }
+
+/* pódios do mês (🥇🥈🥉) — mesmo estilo do Hall da Fama */
+.perfil-podios-titulo { font-size: 0.8em; color: #9aa0ae; font-weight: 700; margin: 4px 0 8px; }
+.perfil-podios { display: flex; justify-content: center; gap: 22px; margin-bottom: 18px; }
+
+/* grade de carros — Classic + 13 VIP, mesmo visual do grid do Menu de Ajuda, com estado
+   bloqueado (escurecido, "tela escura na frente") ou desbloqueado (cor viva normal) */
+.perfil-carros-titulo { font-size: 0.95em; font-weight: 800; color: #fff; text-align: left; margin: 4px 0 10px; }
+.perfil-carros-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.perfil-carro-card {
+  position: relative; display: flex; flex-direction: column; align-items: center;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px; padding: 10px 6px 8px; overflow: hidden;
+}
+.perfil-carro-card.ativo { border-color: #ffd166; box-shadow: 0 0 10px rgba(255,209,102,0.35); }
+.perfil-carro-imagem { width: 100%; height: 3.6em; object-fit: contain; }
+.perfil-carro-nome { font-size: 0.72em; font-weight: 700; color: #dfe3ec; margin-top: 4px; }
+/* bloqueado: cor apagada (grayscale + escurecido) + véu escuro por cima, como uma "tela
+   desligada" — desbloqueado tira tudo isso e volta pra cor viva normal */
+.perfil-carro-card.bloqueado .perfil-carro-imagem { filter: grayscale(1) brightness(0.35); }
+.perfil-carro-card.bloqueado .perfil-carro-nome { color: #5a5f6b; }
+.perfil-carro-card.bloqueado::after {
+  content: '🔒'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 1.3em; background: rgba(0,0,0,0.45);
 }
 
 .menu-ajuda-topo { margin-bottom: 14px; }
