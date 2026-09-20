@@ -511,13 +511,27 @@ async function abrirPerfilDoJogador(usuario) {
       ? `<div class="perfil-liga"><img src="liga/${liga.icone}" alt="${liga.nome}"> ${liga.nome}</div>`
       : `<div class="perfil-sem-liga">Sem liga ainda</div>`;
 
-    // "Classic" (o carro padrão, sempre disponível pra todo mundo) + os 13 carros VIP,
-    // checando cada um contra a lista de desbloqueados que vem do Supabase
-    const desbloqueados = Array.isArray(j.carros_vip_desbloqueados) ? j.carros_vip_desbloqueados : [];
+    // "Classic" (o carro padrão, sempre disponível pra todo mundo) + os 13 carros VIP —
+    // o desbloqueio é CALCULADO na hora, comparando Pontos (que já sabemos que sincroniza
+    // certo) com o preço de cada carro (e a liga mínima, quando o carro exige uma). Antes
+    // usava a lista carros_vip_desbloqueados vinda do Supabase, mas ela pode ficar
+    // desatualizada se o desbloqueio não sincronizar por algum motivo — calculando direto
+    // pelos Pontos, o card sempre reflete a realidade, mesmo que aquela lista esteja
+    // desatualizada ou vazia.
+    const trofeusTotal = Number(j.trofeus_total) || 0;
+    const pontosAtual = Number(j.pontos) || 0;
     const carroAtivo = j.carro_vip_ativo || null;
+    function trofeusMinimosDaLiga(nomeLiga) {
+      const l = LIGAS.find((x) => x.nome === nomeLiga);
+      return l ? l.trofeus : 0;
+    }
     const carrosHtml = [
       carroPerfilCardHtml('Classic', 'Classic.png', true, !carroAtivo),
-      ...CARROS_VIP_INFO.map((c) => carroPerfilCardHtml(c.nome, c.imagem, desbloqueados.includes(c.nome), carroAtivo === c.nome)),
+      ...CARROS_VIP_INFO.map((c) => {
+        const atendeLiga = !c.ligaMinima || trofeusTotal >= trofeusMinimosDaLiga(c.ligaMinima);
+        const desbloqueado = pontosAtual >= (Number(c.preco) || 0) && atendeLiga;
+        return carroPerfilCardHtml(c.nome, c.imagem, desbloqueado, carroAtivo === c.nome);
+      }),
     ].join('');
 
     conteudo.innerHTML = `
